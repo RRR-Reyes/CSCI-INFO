@@ -1,4 +1,4 @@
-# LearnCS
+# CSCI-INFO
 
 Learn everything you need to know about the CS/IT major for DSU! 
 This includes a range of lower- and upper-level classes with interactive visuals!

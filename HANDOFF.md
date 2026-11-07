@@ -1,4 +1,4 @@
-# Handoff: LearnCS (Seeing Theory–style visual CS chapters)
+# Handoff: CSCI-INFO (formerly LearnCS; Seeing Theory–style visual CS chapters)
 
 _Last updated: 2026-11-07. Written for the next Claude session picking this up._
 
@@ -28,7 +28,10 @@ _Last updated: 2026-11-07. Written for the next Claude session picking this up._
 
 ## The goal (in the owner's words, summarized)
 
-LearnCS is a **visualization tool for students**, not a Q&A review site. It was split off
+The site was renamed from LearnCS to **CSCI-INFO** (2026-11-07). The GitHub repo is still `RRR-Reyes/LearnCS`,
+and `package.json` still says `learncs`; both are internal and were left alone on purpose.
+
+CSCI-INFO is a **visualization tool for students**, not a Q&A review site. It was split off
 from the owner's personal ReviewApp (`C:\Users\User\IdeaProjects\ReviewApp`) so ReviewApp
 keeps its question banks while LearnCS goes visual-first.
 
