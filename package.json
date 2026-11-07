@@ -7,7 +7,7 @@
     "react",
     "starter"
   ],
-  "homepage": "https://rrr-reyes.github.io/LearnCS",
+  "homepage": "https://click.soon.it",
   "main": "src/index.tsx",
   "dependencies": {
     "@fontsource/assistant": "^5.1.0",

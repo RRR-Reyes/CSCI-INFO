@@ -11,7 +11,7 @@ chapter engine and visuals and leaving the question banks and practice drawer be
 
 ```bash
 npm install
-npm start        # http://localhost:3000/LearnCS
+npm start        # http://localhost:3000
 ```
 
 ## Where things live
