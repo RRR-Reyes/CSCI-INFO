@@ -103,7 +103,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         </nav>
         <div className="hero-copy">
           <h1>CSCI-INFO</h1>
-          <p>Computer science you can see: scroll through each idea and play with it.</p>
+          <p>Beyond classroom topics and deeper into informatics</p>
           <a className="btn btn-hero" href="#explore">Start</a>
         </div>
         <span className="hero-scroll" aria-hidden>↓</span>
