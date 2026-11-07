@@ -55,6 +55,11 @@ uniform vec2 view;
 uniform float time;
 uniform vec3 rest, tailC, ringC;
 uniform float tailAmt;
+// Bulk-oscillation flash: a broad colour change sweeping across the background only.
+uniform vec2 flashO;     // where it starts, in aspect-corrected units
+uniform float flashT;    // seconds since it started (negative = none)
+uniform float flashSpd, flashHold, flashSeed;
+uniform vec3 flashC;
 out vec4 o;
 vec2 at(ivec2 q) { return texelFetch(s, clamp(q, ivec2(0), res - 1), 0).xy; }
 vec2 field(vec2 uv) {
@@ -66,6 +71,11 @@ vec2 field(vec2 uv) {
   return mix(mix(at(i), at(i + ivec2(1, 0)), f.x), mix(at(i + ivec2(0, 1)), at(i + ivec2(1, 1)), f.x), f.y);
 }
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
 void main() {
   vec2 uv = gl_FragCoord.xy / view;
   vec2 w = field(uv);
@@ -75,7 +85,18 @@ void main() {
   // while the catalyst slowly turns back. Palette colours come from the app's timeline.
   float ring = smoothstep(0.2, 0.7, u) * (1.0 - smoothstep(0.12, 0.34, v));
   float tail = smoothstep(0.04, 0.5, v) * (1.0 - ring);
-  vec3 col = mix(rest, tailC, tail * tailAmt);
+  // The flash reaches each spot after travelling from its origin, holds, then lets go,
+  // like something passing in front of the dish. Its ragged edge comes from noise.
+  vec3 bg = rest;
+  if (flashT >= 0.0) {
+    vec2 a = uv * vec2(view.x / view.y, 1.0);
+    float n = vnoise(a * 3.0 + flashSeed) * 0.6 + vnoise(a * 7.0 - flashSeed) * 0.4;
+    float arrive = (distance(a, flashO) + (n - 0.5) * 0.45) / flashSpd;
+    float local = flashT - arrive;
+    float f = smoothstep(0.0, 0.6, local) * (1.0 - smoothstep(flashHold, flashHold + 1.2, local));
+    bg = mix(rest, flashC, f * 0.85);
+  }
+  vec3 col = mix(bg, tailC, tail * tailAmt);
   col = mix(col, ringC, ring);
 
   // Back-lit dish: brighter centre, soft vignette, a little film grain.
@@ -88,12 +109,12 @@ void main() {
 
 type Pacemaker = { x: number; y: number; period: number; next: number; until: number; left: number; auto: boolean };
 type RGB = [number, number, number];
-type Palette = { rest: RGB; tail: RGB; ring: RGB; tailAmt: number };
+type Palette = { rest: RGB; tail: RGB; ring: RGB; tailAmt: number; flash: RGB };
 
 // Sampled from photos of real BZ dishes.
-const ORANGE: Palette = { rest: [0.93, 0.44, 0.1], tail: [0.98, 0.66, 0.34], ring: [0.99, 0.95, 0.83], tailAmt: 0.45 };
-const BLUE: Palette = { rest: [0.36, 0.11, 0.22], tail: [0.27, 0.27, 0.74], ring: [0.6, 0.7, 1.0], tailAmt: 0.92 };
-const RED: Palette = { rest: [0.86, 0.11, 0.11], tail: [0.95, 0.47, 0.5], ring: [0.8, 0.94, 0.97], tailAmt: 0.5 };
+const ORANGE: Palette = { rest: [0.93, 0.44, 0.1], tail: [0.98, 0.66, 0.34], ring: [0.99, 0.95, 0.83], tailAmt: 0.45, flash: [0.98, 0.64, 0.32] };
+const BLUE: Palette = { rest: [0.36, 0.11, 0.22], tail: [0.27, 0.27, 0.74], ring: [0.6, 0.7, 1.0], tailAmt: 0.92, flash: [0.32, 0.46, 0.92] };
+const RED: Palette = { rest: [0.86, 0.11, 0.11], tail: [0.95, 0.47, 0.5], ring: [0.8, 0.94, 0.97], tailAmt: 0.5, flash: [0.74, 0.27, 0.56] };
 
 /** Hold each colour phase, then cross-fade to the next: orange, blue, red, back to orange. */
 const HOLD = 30;
@@ -108,7 +129,7 @@ function paletteAt(t: number): Palette {
   const A = order[k];
   const B = order[(k + 1) % order.length];
   const mix = (x: RGB, y: RGB): RGB => [x[0] + (y[0] - x[0]) * e, x[1] + (y[1] - x[1]) * e, x[2] + (y[2] - x[2]) * e];
-  return { rest: mix(A.rest, B.rest), tail: mix(A.tail, B.tail), ring: mix(A.ring, B.ring), tailAmt: A.tailAmt + (B.tailAmt - A.tailAmt) * e };
+  return { rest: mix(A.rest, B.rest), tail: mix(A.tail, B.tail), ring: mix(A.ring, B.ring), tailAmt: A.tailAmt + (B.tailAmt - A.tailAmt) * e, flash: mix(A.flash, B.flash) };
 }
 
 export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
@@ -211,6 +232,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     let last = 0;
     let visible = true;
     let started = -1; // real time of the first click
+    let flash: { t0: number; x: number; y: number; spd: number; hold: number; seed: number; end: number } | null = null;
 
     /** A random number of pulses, 6 to 10, before a pacemaker goes quiet. */
     const pulses = () => 6 + Math.floor(Math.random() * 5);
@@ -294,6 +316,14 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       gl.uniform3fv(view.u("tailC"), pal.tail);
       gl.uniform3fv(view.u("ringC"), pal.ring);
       gl.uniform1f(view.u("tailAmt"), pal.tailAmt);
+      gl.uniform3fv(view.u("flashC"), pal.flash);
+      gl.uniform1f(view.u("flashT"), flash ? realTime - flash.t0 : -1);
+      if (flash) {
+        gl.uniform2f(view.u("flashO"), flash.x, flash.y);
+        gl.uniform1f(view.u("flashSpd"), flash.spd);
+        gl.uniform1f(view.u("flashHold"), flash.hold);
+        gl.uniform1f(view.u("flashSeed"), flash.seed);
+      }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
 
@@ -303,6 +333,18 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       last = ts;
       if (!visible) return;
       realTime += dt;
+      // Now and then (about once every 25 s on average) the background flashes.
+      if (flash && realTime - flash.t0 > flash.end) flash = null;
+      if (!flash && started >= 0 && realTime - started > 6 && Math.random() < dt / 25) {
+        const aspect = canvas.clientWidth / canvas.clientHeight;
+        const spd = 0.7 + Math.random() * 0.6; // screen heights per second
+        const hold = 1.2 + Math.random() * 1.8;
+        const x = Math.random() * aspect;
+        const y = Math.random();
+        // Done once the far corner has caught up and faded back.
+        const far = Math.max(Math.hypot(x, y), Math.hypot(aspect - x, y), Math.hypot(x, 1 - y), Math.hypot(aspect - x, 1 - y));
+        flash = { t0: realTime, x, y, spd, hold, seed: Math.random() * 100, end: (far + 0.25) / spd + hold + 1.5 };
+      }
       carry += dt * MODEL_PER_SEC;
       let steps = Math.min(Math.floor(carry / P.dt), 60);
       carry -= steps * P.dt;
