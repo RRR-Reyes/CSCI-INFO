@@ -14,6 +14,12 @@ npm install
 npm start        # http://localhost:3000
 ```
 
+## Hosting
+
+The site is hosted on **Cloudflare Pages** at **https://typeurl.pages.dev**, rebuilt on every push
+to `main` (build command `npm run build`, output directory `build`). It is not on GitHub Pages.
+See "Hosting and deployment" in `HANDOFF.md` for the gotchas.
+
 ## Where things live
 
 - `src/courses/`: course and unit data. `discrete.ts` is the full scrolling-chapter shape
