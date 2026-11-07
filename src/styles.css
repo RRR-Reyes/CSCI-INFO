@@ -63,7 +63,7 @@ kbd { font-family: var(--mono); font-size: 0.75em; padding: 1px 5px; border: 1px
 /* ---------- home ---------- */
 .hero {
   position: relative; height: 100vh; min-height: 520px; overflow: hidden;
-  background: radial-gradient(ellipse at 50% 45%, #cf4f22 0%, #8a2a14 85%);
+  background: radial-gradient(ellipse at 50% 45%, #ee7019 0%, #b2400c 90%);
   color: #fff; display: grid; place-items: center;
 }
 .hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
