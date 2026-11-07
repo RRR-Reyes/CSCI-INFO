@@ -112,13 +112,13 @@ type RGB = [number, number, number];
 type Palette = { rest: RGB; tail: RGB; ring: RGB; tailAmt: number; flash: RGB };
 
 // Sampled from photos of real BZ dishes.
-const ORANGE: Palette = { rest: [0.93, 0.44, 0.1], tail: [0.98, 0.66, 0.34], ring: [0.99, 0.95, 0.83], tailAmt: 0.45, flash: [0.72, 0.12, 0.16] };
+const ORANGE: Palette = { rest: [0.93, 0.44, 0.1], tail: [0.98, 0.66, 0.34], ring: [0.99, 0.95, 0.83], tailAmt: 0.45, flash: [0.965, 0.776, 0.141] }; // #f6c624 golden flash in the orange phase
 const BLUE: Palette = { rest: [0.36, 0.11, 0.22], tail: [0.27, 0.27, 0.74], ring: [0.6, 0.7, 1.0], tailAmt: 0.92, flash: [0.32, 0.46, 0.92] };
-const RED: Palette = { rest: [0.86, 0.11, 0.11], tail: [0.95, 0.47, 0.5], ring: [0.8, 0.94, 0.97], tailAmt: 0.5, flash: [0.48, 0.05, 0.12] };
+const RED: Palette = { rest: [0.86, 0.11, 0.11], tail: [0.95, 0.47, 0.5], ring: [0.8, 0.94, 0.97], tailAmt: 0.5, flash: [0.53, 0.81, 0.98] }; // sky-blue flash in the red phase
 
-/** Hold each colour phase, then cross-fade to the next: orange, blue, red, back to orange. */
-const HOLD = 30;
-const FADE = 15;
+/** A new colour every 15 s: hold each phase 12 s, then cross-fade for 3 s (orange, blue, red, back to orange). */
+const HOLD = 12;
+const FADE = 3;
 function paletteAt(t: number): Palette {
   const order = [ORANGE, BLUE, RED];
   const span = HOLD + FADE;
@@ -311,7 +311,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       gl.uniform2i(view.u("res"), cols, rows);
       gl.uniform2f(view.u("view"), canvas.width, canvas.height);
       gl.uniform1f(view.u("time"), realTime);
-      const pal = paletteAt(started < 0 ? 0 : realTime - started);
+      const pal = paletteAt(realTime); // cycles from page load, not from the first click
       gl.uniform3fv(view.u("rest"), pal.rest);
       gl.uniform3fv(view.u("tailC"), pal.tail);
       gl.uniform3fv(view.u("ringC"), pal.ring);
@@ -406,7 +406,9 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       io.disconnect();
       window.removeEventListener("resize", resize);
       el.removeEventListener("pointerdown", onDown);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      // No loseContext() here: React can run this effect again on the same canvas (StrictMode,
+      // hot reload), and a lost context stays lost, leaving the hero blank. The context is
+      // freed with the canvas when the hero unmounts.
     };
   }, [host]);
 

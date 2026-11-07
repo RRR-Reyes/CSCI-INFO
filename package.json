@@ -10,6 +10,7 @@
   "homepage": "",
   "main": "src/index.tsx",
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
     "@fontsource/assistant": "^5.1.0",
     "@fontsource/nunito": "5.2.7",
     "@phosphor-icons/react": "^2.1.7",
