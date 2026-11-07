@@ -237,6 +237,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     // Randomly placed pacemakers never number more than this at once (4 to 8, picked per visit).
     const MAX_AUTO = 4 + Math.floor(Math.random() * 5);
     const autoCount = () => pacemakers.filter((p) => p.auto).length;
+    const MAX_CLICKS = 4; // clicked pacemakers allowed at once, so rings don't get crowded
 
     /**
      * True once the liquid around a pacemaker has recovered. Firing into a wave's tail would
@@ -353,7 +354,10 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       const box = canvas.getBoundingClientRect();
       const x = (e.clientX - box.left) / box.width;
       const y = (e.clientY - box.top) / box.height;
-      addPacemaker(x, y, false); // clicks are never limited
+      // At most MAX_CLICKS clicked sources at once: a new click retires the oldest one.
+      const clicked = pacemakers.filter((p) => !p.auto);
+      if (clicked.length >= MAX_CLICKS) pacemakers.splice(pacemakers.indexOf(clicked[0]), 1);
+      addPacemaker(x, y, false);
       if (started < 0) {
         started = realTime;
         for (let i = 0; i < 40; i++) {
