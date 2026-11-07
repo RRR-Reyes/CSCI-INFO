@@ -232,8 +232,8 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     let started = -1; // real time of the first click
     const bubbles: { x: number; y: number; r: number; born: number }[] = [];
 
-    /** A random number of pulses, 3 to 10, before a pacemaker goes quiet. */
-    const pulses = () => 3 + Math.floor(Math.random() * 8);
+    /** A random number of pulses, 6 to 8, before a pacemaker goes quiet. */
+    const pulses = () => 6 + Math.floor(Math.random() * 3);
     // Randomly placed pacemakers never number more than this at once (4 to 8, picked per visit).
     const MAX_AUTO = 4 + Math.floor(Math.random() * 5);
     const autoCount = () => pacemakers.filter((p) => p.auto).length;
@@ -262,7 +262,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     const addPacemaker = (x: number, y: number, auto: boolean) => {
       // Real pacemakers fire at slightly different rates, which is what gives the cusps
       // where two families of rings collide.
-      // Each pacemaker sends out 3 to 10 rings and then goes quiet, so the dish clears.
+      // Each pacemaker sends out 6 to 8 rings and then goes quiet, so the dish clears.
       pacemakers.push({ x, y, period: 2.0 + Math.random() * 0.8, next: simTime, until: -1, left: pulses(), auto });
     };
 
