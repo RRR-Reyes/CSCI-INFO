@@ -1,4 +1,4 @@
-# NOT IN USE: the site is hosted on Cloudflare Pages (https://typeurl.pages.dev), not GitHub Pages.
+# NOT IN USE: the site is hosted on Cloudflare Pages (https://csci-info.pages.dev), not GitHub Pages.
 # Kept only in case GitHub Pages is wanted again. See HANDOFF.md, "Hosting and deployment".
 # Builds the site and publishes it to GitHub Pages on every push to main.
 # One-time setup: repo Settings → Pages → Source: "GitHub Actions".

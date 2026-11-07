@@ -5,7 +5,8 @@ _Last updated: 2026-11-07. Written for the next Claude session picking this up._
 ## Hosting and deployment (read this first)
 
 - **The live site runs on Cloudflare Pages, not GitHub Pages.** The main link is
-  **https://typeurl.pages.dev**. Give students that link.
+  **https://csci-info.pages.dev**. Give students that link.
+  (An earlier Pages project, `typeurl`, is retired; ignore `typeurl.pages.dev`.)
 - The Pages project is connected to `RRR-Reyes/LearnCS`. Production branch is `main`, and every
   push to `main` redeploys automatically.
 - Cloudflare build settings: build command `npm run build`, build output directory `build`,
@@ -213,5 +214,5 @@ play with instead of fixed lists.
 4. Consider bringing Discrete's visuals into the wood style, but only if the owner asks.
 5. Home page still has ReviewApp's dark dot-field hero and rounded Nunito tiles. Confirm before redesigning.
 6. Section thumbnails for System Architecture and Data Structures.
-7. ~~Create a GitHub repo and set up hosting~~ Done: GitHub repo exists, hosting is Cloudflare Pages at typeurl.pages.dev.
+7. ~~Create a GitHub repo and set up hosting~~ Done: GitHub repo exists, hosting is Cloudflare Pages at csci-info.pages.dev.
 8. Delete the dead CSS.
