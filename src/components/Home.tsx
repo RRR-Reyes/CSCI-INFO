@@ -95,7 +95,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
           <button className="link-btn" onClick={onOpenPicker}>All chapters</button>
         </nav>
         <div className="hero-copy">
-          <h1>LearnCS</h1>
+          <h1>CSCI-INFO</h1>
           <p>Computer science you can see: scroll through each idea and play with it.</p>
           <a className="btn btn-hero" href="#explore">Start</a>
         </div>

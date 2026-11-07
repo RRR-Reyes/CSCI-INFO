@@ -1,4 +1,4 @@
-# LearnCS
+# CSCI-INFO
 
 Learn everything you need to know about the CS/IT major for DSU! 
 This includes a range of lower- and upper-level classes with interactive visuals!
@@ -13,6 +13,12 @@ chapter engine and visuals and leaving the question banks and practice drawer be
 npm install
 npm start        # http://localhost:3000
 ```
+
+## Hosting
+
+The site is hosted on **Cloudflare Pages** at **https://csci-info.pages.dev**, rebuilt on every push
+to `main` (build command `npm run build`, output directory `build`). It is not on GitHub Pages.
+See "Hosting and deployment" in `HANDOFF.md` for the gotchas.
 
 ## Where things live
 

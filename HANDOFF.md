@@ -1,10 +1,37 @@
-# Handoff: LearnCS (Seeing Theory–style visual CS chapters)
+# Handoff: CSCI-INFO (formerly LearnCS; Seeing Theory–style visual CS chapters)
 
-_Last updated: 2026-10-18 (evening). Written for the next Claude session picking this up._
+_Last updated: 2026-11-07. Written for the next Claude session picking this up._
+
+## Hosting and deployment (read this first)
+
+- **The live site runs on Cloudflare Pages, not GitHub Pages.** The main link is
+  **https://csci-info.pages.dev**. Give students that link.
+  (An earlier Pages project, `typeurl`, is retired; ignore `typeurl.pages.dev`.)
+- The Pages project is connected to `RRR-Reyes/LearnCS`. Production branch is `main`, and every
+  push to `main` redeploys automatically.
+- Cloudflare build settings: build command `npm run build`, build output directory `build`,
+  root directory blank. If these are blank, Cloudflare skips the build and deploys the raw repo,
+  and the site returns an empty 404 (this happened once).
+- `homepage` in `package.json` is `""`, so the build loads its files from `/`. Do not set it
+  back to a `/LearnCS` path or a github.io URL, and do not add `public/CNAME` (it is a
+  GitHub Pages file and was deleted on purpose).
+- Routing uses the URL hash (`#/discrete/sets`), so no redirect rules are needed.
+- `.github/workflows/deploy.yml` is a leftover GitHub Pages workflow. GitHub Pages is **not** in
+  use. Ignore it, or delete it if it causes failing checks.
+- Cloudflare's build image uses npm 10. `package-lock.json` must stay installable with npm 10
+  (`npm ci`); a lock file written by npm 11 failed there with "Missing: yaml@2.9.1 from lock file".
+  If that error comes back, regenerate with `npm install --package-lock-only` on npm 10.
+- Tried and abandoned: `click.soon.it` on FreeDNS. That shared dynamic-DNS domain refuses CNAME
+  records and GitHub could not issue a certificate for it, so students saw "Not secure".
+- If a Cloudflare Access policy is turned on for the project (Settings → General), preview
+  deployment URLs redirect to a sign-in page. Keep it off.
 
 ## The goal (in the owner's words, summarized)
 
-LearnCS is a **visualization tool for students**, not a Q&A review site. It was split off
+The site was renamed from LearnCS to **CSCI-INFO** (2026-11-07). The GitHub repo is still `RRR-Reyes/LearnCS`,
+and `package.json` still says `learncs`; both are internal and were left alone on purpose.
+
+CSCI-INFO is a **visualization tool for students**, not a Q&A review site. It was split off
 from the owner's personal ReviewApp (`C:\Users\User\IdeaProjects\ReviewApp`) so ReviewApp
 keeps its question banks while LearnCS goes visual-first.
 
@@ -42,9 +69,8 @@ Owner feedback so far:
   5. (this HANDOFF update, if committed)
 - Commit messages must end with the attribution line from the session's system reminder.
 - `node_modules` was copied from ReviewApp, so `npm start` works as is.
-- `package.json` name is `learncs` and `homepage` is `https://rrr-reyes.github.io/LearnCS`
-  (no GitHub repo exists yet). Because of `homepage`, the dev server serves the app under
-  **`/LearnCS/`**, and the bare `/` is blank.
+- `package.json` name is `learncs`. `homepage` is `""`, so the dev server and the build both serve
+  the app at the root, `/` (see "Hosting and deployment" above).
 - **Don't modify ReviewApp.** It has the owner's uncommitted edits and a tracked `build/` folder.
   Reading it is fine: its question bank `src/modules/system/questions.ts` is the best record of
   what the System Architecture course actually tests.
@@ -69,7 +95,7 @@ Owner feedback so far:
   narrower, visuals render inline under each section.
 - `src/components/Lab.tsx` (**#/lab**): a test bench listing every visual from every course once
   (deduplicated by component), with a course filter and a name search. Routed in `App.tsx`
-  (`courseId === "lab"`). Open http://localhost:3005/LearnCS/#/lab. Visuals render in place there,
+  (`courseId === "lab"`). Open http://localhost:3005/#/lab. Visuals render in place there,
   so split visuals show their stage under their controls.
 - `src/useActiveSection.ts`: the active section is the last one whose top crossed 45% of the viewport.
 - `src/visuals/Stage.tsx`: `<Stage>` portals a split visual's display into the right column;
@@ -136,7 +162,7 @@ Owner feedback so far:
 
 ```bash
 cd /c/Users/User/IdeaProjects/LearnCS
-PORT=3005 BROWSER=none npm start       # http://localhost:3005/LearnCS/#/system/numbers
+PORT=3005 BROWSER=none npm start       # http://localhost:3005/#/system/numbers
 BUILD_PATH="$HOME/AppData/Local/Temp/learncs-build" npx react-scripts build
 ```
 
@@ -191,5 +217,5 @@ play with instead of fixed lists.
 4. Consider bringing Discrete's visuals into the wood style, but only if the owner asks.
 5. Home page still has ReviewApp's dark dot-field hero and rounded Nunito tiles. Confirm before redesigning.
 6. Section thumbnails for System Architecture and Data Structures.
-7. Create a GitHub repo, push, set up GitHub Pages (`homepage` is already set).
+7. ~~Create a GitHub repo and set up hosting~~ Done: GitHub repo exists, hosting is Cloudflare Pages at csci-info.pages.dev.
 8. Delete the dead CSS.
