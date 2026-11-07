@@ -12,7 +12,8 @@ import type { RefObject } from "react";
  *
  * Clicking drops a "pacemaker" (in a real dish, a speck of dust or a bubble) that keeps
  * firing concentric target waves. Shortly after, new pacemakers nucleate elsewhere.
- * Colours follow the ferroin indicator: orange-red reduced solution, blue oxidised waves.
+ * Colours follow a real dish as it ages: orange with white rings, then the blue phase,
+ * then red with pale rings, and round again.
  */
 
 const SIM_VS = `#version 300 es
@@ -52,6 +53,10 @@ uniform sampler2D s;
 uniform ivec2 res;
 uniform vec2 view;
 uniform float time;
+uniform vec3 rest, tailC, ringC;
+uniform float tailAmt;
+uniform int nb;
+uniform vec4 bub[40];
 out vec4 o;
 vec2 at(ivec2 q) { return texelFetch(s, clamp(q, ivec2(0), res - 1), 0).xy; }
 vec2 field(vec2 uv) {
@@ -68,28 +73,61 @@ void main() {
   vec2 w = field(uv);
   float u = w.x, v = w.y;
 
-  // Ferroin colours, drifting only slightly as the reaction ages.
-  float drift = 0.5 + 0.5 * sin(time * 0.05);
-  vec3 rest = mix(vec3(0.80, 0.30, 0.12), vec3(0.74, 0.21, 0.16), drift);
-  vec3 blue = mix(vec3(0.10, 0.19, 0.50), vec3(0.16, 0.16, 0.48), drift);
-  vec3 edge = vec3(0.50, 0.68, 0.92);
+  // A thin bright ring at the leading edge of each wave, then a fading tail behind it
+  // while the catalyst slowly turns back. Palette colours come from the app's timeline.
+  float ring = smoothstep(0.2, 0.7, u) * (1.0 - smoothstep(0.12, 0.34, v));
+  float tail = smoothstep(0.04, 0.5, v) * (1.0 - ring);
+  vec3 col = mix(rest, tailC, tail * tailAmt);
+  col = mix(col, ringC, ring);
 
-  float ox = smoothstep(0.12, 0.8, u);
-  float tail = smoothstep(0.05, 0.6, v) * (1.0 - ox);
-  vec3 col = mix(rest, blue, ox);
-  col = mix(col, mix(rest, blue, 0.35) * 0.95, tail * 0.55);
-  float lead = ox * (1.0 - smoothstep(0.02, 0.3, v));
-  col = mix(col, edge, lead * 0.55);
+  // Gas bubbles sitting in the dish: refracting, with a dark rim and a tiny highlight.
+  vec2 px = gl_FragCoord.xy;
+  for (int i = 0; i < 40; i++) {
+    if (i >= nb) break;
+    vec4 bb = bub[i];
+    float d = distance(px, bb.xy) / bb.z;
+    if (d < 1.15) {
+      float body = 1.0 - smoothstep(0.85, 1.0, d);
+      float rim = smoothstep(0.55, 0.95, d) * body;
+      float hl = 1.0 - smoothstep(0.0, 0.32, distance(px, bb.xy + vec2(-0.35, 0.35) * bb.z) / bb.z);
+      col = mix(col, col * 1.08 + 0.03, body * 0.5 * bb.w);
+      col = mix(col, col * 0.55, rim * 0.6 * bb.w);
+      col = mix(col, vec3(1.0), hl * 0.8 * bb.w);
+    }
+  }
 
   // Back-lit dish: brighter centre, soft vignette, a little film grain.
   vec2 qv = (uv - 0.5) * vec2(view.x / view.y, 1.0);
-  float light = 1.08 - 0.55 * dot(qv, qv);
+  float light = 1.06 - 0.45 * dot(qv, qv);
   col *= light;
   col += (hash(gl_FragCoord.xy + fract(time) * 97.0) - 0.5) * 0.035;
   o = vec4(pow(max(col, 0.0), vec3(0.95)), 1.0);
 }`;
 
 type Pacemaker = { x: number; y: number; period: number; next: number; until: number };
+type RGB = [number, number, number];
+type Palette = { rest: RGB; tail: RGB; ring: RGB; tailAmt: number };
+
+// Sampled from photos of real BZ dishes.
+const ORANGE: Palette = { rest: [0.93, 0.44, 0.1], tail: [0.98, 0.66, 0.34], ring: [0.99, 0.95, 0.83], tailAmt: 0.45 };
+const BLUE: Palette = { rest: [0.36, 0.11, 0.22], tail: [0.27, 0.27, 0.74], ring: [0.6, 0.7, 1.0], tailAmt: 0.92 };
+const RED: Palette = { rest: [0.86, 0.11, 0.11], tail: [0.95, 0.47, 0.5], ring: [0.8, 0.94, 0.97], tailAmt: 0.5 };
+
+/** Hold each colour phase, then cross-fade to the next: orange, blue, red, back to orange. */
+const HOLD = 30;
+const FADE = 15;
+function paletteAt(t: number): Palette {
+  const order = [ORANGE, BLUE, RED];
+  const span = HOLD + FADE;
+  const k = Math.floor(t / span) % order.length;
+  const into = t % span;
+  const f = into < HOLD ? 0 : (into - HOLD) / FADE;
+  const e = f * f * (3 - 2 * f);
+  const A = order[k];
+  const B = order[(k + 1) % order.length];
+  const mix = (x: RGB, y: RGB): RGB => [x[0] + (y[0] - x[0]) * e, x[1] + (y[1] - x[1]) * e, x[2] + (y[2] - x[2]) * e];
+  return { rest: mix(A.rest, B.rest), tail: mix(A.tail, B.tail), ring: mix(A.ring, B.ring), tailAmt: A.tailAmt + (B.tailAmt - A.tailAmt) * e };
+}
 
 export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -102,9 +140,10 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Model parameters (grid units).
-    const P = { dt: 0.0025, D: 30, eps: 0.02, a: 0.75, b: 0.06, k: 2.4 };
+    // Kept well inside the excitable regime so even the very first pulse always takes off.
+    const P = { dt: 0.0025, D: 20, eps: 0.02, a: 0.75, b: 0.04, k: 1.6 };
     const SCALE = 2; // CSS px per grid cell
-    const MODEL_PER_SEC = 1.6; // how fast model time runs
+    const MODEL_PER_SEC = 2.2; // how fast model time runs
 
     const compile = (type: number, src: string) => {
       const sh = gl.createShader(type)!;
@@ -177,6 +216,8 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
         rows = r;
         alloc();
         pacemakers.length = 0;
+        bubbles.length = 0;
+        started = -1;
       }
     };
 
@@ -188,11 +229,13 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     let raf = 0;
     let last = 0;
     let visible = true;
+    let started = -1; // real time of the first click
+    const bubbles: { x: number; y: number; r: number; born: number }[] = [];
 
     const addPacemaker = (x: number, y: number) => {
       // Real pacemakers fire at slightly different rates, which is what gives the cusps
       // where two families of rings collide.
-      pacemakers.push({ x, y, period: 1.4 + Math.random() * 0.6, next: simTime, until: -1 });
+      pacemakers.push({ x, y, period: 2.0 + Math.random() * 0.8, next: simTime, until: -1 });
       if (pacemakers.length > 14) pacemakers.shift();
     };
 
@@ -226,6 +269,23 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       gl.uniform2i(view.u("res"), cols, rows);
       gl.uniform2f(view.u("view"), canvas.width, canvas.height);
       gl.uniform1f(view.u("time"), realTime);
+      const pal = paletteAt(started < 0 ? 0 : realTime - started);
+      gl.uniform3fv(view.u("rest"), pal.rest);
+      gl.uniform3fv(view.u("tailC"), pal.tail);
+      gl.uniform3fv(view.u("ringC"), pal.ring);
+      gl.uniform1f(view.u("tailAmt"), pal.tailAmt);
+      // Bubbles of CO2 slowly form once the reaction is going.
+      const dpr = canvas.width / canvas.clientWidth;
+      const live = bubbles.filter((b) => realTime > b.born);
+      gl.uniform1i(view.u("nb"), live.length);
+      if (live.length) {
+        gl.uniform4fv(
+          view.u("bub"),
+          new Float32Array(
+            live.flatMap((b) => [b.x * canvas.width, (1 - b.y) * canvas.height, b.r * dpr, Math.min(1, (realTime - b.born) / 3)]),
+          ),
+        );
+      }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
 
@@ -242,10 +302,10 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
         const stims: number[][] = [];
         for (const pm of pacemakers) {
           if (simTime >= pm.next) {
-            pm.until = simTime + 0.04; // hold the stimulus briefly so the wave can take hold
+            pm.until = simTime + 0.1; // hold the stimulus briefly so the wave can take hold
             pm.next = simTime + pm.period;
           }
-          if (simTime < pm.until && stims.length < 8) stims.push([pm.x * cols, (1 - pm.y) * rows, 6]);
+          if (simTime < pm.until && stims.length < 8) stims.push([pm.x * cols, (1 - pm.y) * rows, 7]);
         }
         step(stims);
         simTime += P.dt;
@@ -259,6 +319,12 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       const x = (e.clientX - box.left) / box.width;
       const y = (e.clientY - box.top) / box.height;
       addPacemaker(x, y);
+      if (started < 0) {
+        started = realTime;
+        for (let i = 0; i < 40; i++) {
+          bubbles.push({ x: Math.random(), y: Math.random(), r: 1.5 + Math.random() ** 3 * 4, born: realTime + 4 + Math.random() * 90 });
+        }
+      }
       // The disturbance seeds new pacemakers elsewhere in the dish over the next seconds.
       const spawn = 1 + Math.floor(Math.random() * 2);
       for (let i = 0; i < spawn; i++) {
