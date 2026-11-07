@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import BZReaction from "./BZReaction";
-import { COURSES, findCourse, sectionsOf, unitHue } from "../courses";
-import type { Unit } from "../courses";
+import { COURSES, findCourse, sectionsOf } from "../courses";
+import type { Course, Unit } from "../courses";
 import { go } from "../useHashRoute";
 
 /** How many hands-on visuals a unit has, for its tile. */
@@ -11,44 +11,70 @@ function visualCount(u: Unit) {
   return n ? `${n} visual${n === 1 ? "" : "s"}` : "Reading";
 }
 
+/** Distinct hues for tiles that are not tied to a course color. */
+const PALETTE = [262, 200, 152, 32, 340, 178, 292, 12, 228, 96];
+/** Corner shapes, cycled so neighbouring tiles never repeat one. */
+const SHAPES = ["circle", "diamond", "triangle", "ring", "hexagon", "quarter", "pill", "blob"];
+const tileStyle = (hue: number, i: number) => ({ ["--uh" as string]: hue, animationDelay: `${i * 40}ms` });
+/** A course's units fan out across a wide band around the course hue, so each one gets its own color. */
+const courseTileHue = (c: Course, i: number) => (c.hue + (i - (c.units.length - 1) / 2) * 22 + 360) % 360;
+const shapeOf = (i: number) => `shape-${SHAPES[i % SHAPES.length]}`;
+
 /** One entry inside an opened box: a chapter or a tool, or a placeholder for one still to come. */
 type Item = { title: string; note: string; to?: [string, string] };
+
+/** One-line descriptions for chapter tiles, keyed by section id. */
+const SHORT_NOTES: Record<string, string> = {
+  operations: "Union, intersection and complement on a Venn diagram.",
+  cardinality: "Count what is in a set, and every subset it has.",
+  concepts: "Subsets, disjoint sets and equal sets.",
+  cartesian: "Pair up elements of two sets into ordered pairs.",
+};
 
 /** Sections of an existing unit, listed as chapters that open that unit. */
 function unitItems(courseId: string, unitId: string): Item[] {
   const unit = findCourse(courseId)?.units.find((u) => u.id === unitId);
   if (!unit) return [];
-  return sectionsOf(unit).map((s) => ({ title: s.title, note: s.visualHint ?? "", to: [courseId, unitId] }));
+  return sectionsOf(unit).map((s) => ({ title: s.title, note: SHORT_NOTES[s.id] ?? "", to: [courseId, unitId] }));
 }
 
-type Hub = { id: string; title: string; blurb: string; hue: number; items?: () => Item[] };
+type Hub = { id: string; label: string; title: string; blurb: string; meta: string; hue: number; shape: string; items?: () => Item[] };
 
 /** The three boxes on the home page. Courses opens the course list instead of items. */
 const HUBS: Hub[] = [
   {
     id: "sets",
+    label: "Start here",
     title: "Set Theory",
     blurb: "Collections, notation, and the operations that combine them.",
-    hue: 212,
+    meta: `${unitItems("discrete", "sets").length} chapters`,
+    hue: 228,
+    shape: "shape-circle",
     items: () => unitItems("discrete", "sets"),
   },
   {
     id: "visuals",
-    title: "Other Visuals",
-    blurb: "Expression trees, truth tables, and pseudocode.",
-    hue: 140,
+    label: "Sandbox",
+    title: "Playground",
+    blurb: "Build expression trees, truth tables, and pseudocode of your own.",
+    meta: "4 tools",
+    hue: 158,
+    shape: "shape-triangle",
     items: () => [
       { title: "Expression Trees", note: "Type an expression and watch it evaluate from the leaves up.", to: ["discrete", "logic"] },
       { title: "Truth Tables", note: "Any expression, one column per step.", to: ["discrete", "logic"] },
       { title: "Logic Lab", note: "Check equivalences and play with quantifiers.", to: ["discrete", "logic"] },
-      { title: "Pseudocode", note: "Coming soon: step through pseudocode line by line." },
+      { title: "Pseudocode", note: "Step through pseudocode line by line." },
     ],
   },
   {
     id: "courses",
-    title: "Courses",
-    blurb: `${COURSES.length} courses from the first years of CS and IT.`,
-    hue: 24,
+    label: "By class",
+    title: "Course Library",
+    blurb: "Every unit from the CS and IT classes of the first two years.",
+    meta: `${COURSES.length} courses · ${COURSES.reduce((n, c) => n + c.units.length, 0)} units`,
+    hue: 22,
+    shape: "shape-hexagon",
   },
 ];
 
@@ -78,12 +104,14 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
           {HUBS.map((hub, i) => (
             <button
               key={hub.id}
-              className="hub"
-              style={{ ["--uh" as string]: hub.hue, animationDelay: `${i * 60}ms` }}
+              className={`tile tile-hub ${hub.shape}`}
+              style={tileStyle(hub.hue, i)}
               onClick={(e) => setOpen({ hub, from: e.currentTarget.getBoundingClientRect() })}
             >
+              <span className="tile-label">{hub.label}</span>
               <strong>{hub.title}</strong>
-              <span>{hub.blurb}</span>
+              <span className="tile-blurb">{hub.blurb}</span>
+              <span className="tile-meta">{hub.meta}</span>
             </button>
           ))}
         </div>
@@ -143,19 +171,21 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
 
         <div className="hub-panel-body">
           {items ? (
-            <ol className="hub-items">
+            <div className="tile-grid">
               {items.map((it, i) => (
-                <li key={it.title} style={{ animationDelay: `${120 + i * 40}ms` }}>
-                  <button className="hub-item" disabled={!it.to} onClick={() => it.to && go(...it.to)}>
-                    <span className="hub-item-num">{i + 1}.</span>
-                    <span>
-                      <strong>{it.title}</strong>
-                      {it.note && <small>{it.note.replace(/\\[()]/g, "")}</small>}
-                    </span>
-                  </button>
-                </li>
+                <button
+                  key={it.title}
+                  className={`tile ${shapeOf(i)}`}
+                  style={tileStyle(PALETTE[i % PALETTE.length], i)}
+                  disabled={!it.to}
+                  onClick={() => it.to && go(...it.to)}
+                >
+                  <span className="tile-label">{it.to ? `${hub.id === "sets" ? "Chapter" : "Tool"} ${i + 1}` : "Coming soon"}</span>
+                  <strong>{it.title}</strong>
+                  {it.note && <span className="tile-blurb">{it.note.replace(/\\[()]/g, "")}</span>}
+                </button>
               ))}
-            </ol>
+            </div>
           ) : (
             COURSES.map((course) => (
               <article key={course.id} className="course-row" style={{ ["--h" as string]: course.hue }}>
@@ -166,17 +196,17 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
                     <p>{course.tagline}</p>
                   </div>
                 </div>
-                <div className="unit-tiles">
+                <div className="tile-grid">
                   {course.units.map((u, i) => (
                     <button
                       key={u.id}
-                      className="unit-tile"
-                      style={{ ["--uh" as string]: unitHue(course, i), animationDelay: `${i * 40}ms` }}
+                      className={`tile ${shapeOf(i)}`}
+                      style={tileStyle(courseTileHue(course, i), i)}
                       onClick={() => go(course.id, u.id)}
                     >
-                      <span className="unit-tile-label">{u.label}</span>
+                      <span className="tile-label">{u.label}</span>
                       <strong>{u.title}</strong>
-                      <span className="unit-tile-meta">{visualCount(u)}</span>
+                      <span className="tile-meta">{visualCount(u)}</span>
                     </button>
                   ))}
                 </div>

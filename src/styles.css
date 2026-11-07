@@ -1369,19 +1369,7 @@ svg text { font-family: var(--font); }
 }
 
 /* ---------- home: three boxes that open into panels ---------- */
-.hubs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; }
-.hub {
-  text-align: left; min-height: 200px; padding: 26px 28px; border-radius: 28px;
-  background: hsl(var(--uh) 30% 94%); color: hsl(var(--uh) 30% 22%);
-  box-shadow: inset 0 0 0 1px hsl(var(--uh) 15% 45% / 0.6);
-  display: flex; flex-direction: column; gap: 10px;
-  transition: transform 0.25s var(--ease-out), box-shadow 0.25s;
-  animation: rise 0.6s var(--ease-out) both;
-}
-.hub strong { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.01em; }
-.hub span { color: hsl(var(--uh) 15% 38%); max-width: 26ch; }
-.hub:hover { transform: translateY(-4px); box-shadow: inset 0 0 0 1px hsl(var(--uh) 15% 45% / 0.6), 0 16px 32px hsl(var(--uh) 30% 30% / 0.16); }
-
+.hubs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
 .hub-overlay { position: fixed; inset: 0; z-index: 900; background: rgba(20, 18, 32, 0); transition: background 0.35s; }
 .hub-overlay.is-grown { background: rgba(20, 18, 32, 0.45); }
 .hub-panel {
@@ -1396,20 +1384,67 @@ svg text { font-family: var(--font); }
 .hub-panel-body { flex: 1; overflow: auto; padding: 8px 40px 40px; opacity: 0; transition: opacity 0.25s 0.2s; }
 .hub-overlay.is-grown .hub-panel-body { opacity: 1; }
 .hub-panel-body .course-row:first-child { margin-top: 16px; }
-.hub-items { list-style: none; display: grid; gap: 10px; margin-top: 12px; }
-.hub-items li { animation: rise 0.5s var(--ease-out) both; }
-.hub-item {
-  width: 100%; display: flex; gap: 16px; align-items: baseline; text-align: left;
-  padding: 16px 20px; border-radius: var(--radius); background: var(--paper);
-  box-shadow: inset 0 0 0 1px var(--line); transition: transform 0.2s var(--ease-out), box-shadow 0.2s;
-}
-.hub-item:hover:not(:disabled) { transform: translateX(4px); box-shadow: inset 0 0 0 1px hsl(var(--uh) 40% 45% / 0.5); }
-.hub-item:disabled { opacity: 0.55; cursor: default; }
-.hub-item-num { font-size: 1.3rem; font-weight: 800; color: hsl(var(--uh) 40% 40%); min-width: 2ch; }
-.hub-item strong { display: block; font-size: 1.2rem; }
-.hub-item small { display: block; color: var(--ink-3); margin-top: 2px; font-size: 0.9rem; }
+.hub-panel-body > .tile-grid { margin-top: 12px; }
 @media (max-width: 640px) {
   .hub-panel { inset: 16px 0; border-radius: 24px; }
   .hub-panel-head, .hub-panel-body { padding-left: 20px; padding-right: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .hub-overlay.is-grown .hub-panel { transition: none; } }
+
+/* ---------- tiles: label, title, footer, and a colored shape in the corner ---------- */
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.tile {
+  --shape: hsl(var(--uh) 78% 80%);
+  --shape-2: hsl(calc(var(--uh) + 40) 80% 86%);
+  text-align: left; padding: 16px 18px; min-height: 124px; border-radius: var(--radius);
+  background: linear-gradient(145deg, hsl(var(--uh) 85% 96%), hsl(calc(var(--uh) + 18) 80% 92%));
+  color: hsl(var(--uh) 45% 20%);
+  display: flex; flex-direction: column; gap: 4px; position: relative; overflow: hidden; isolation: isolate;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s;
+  animation: rise 0.6s var(--ease-out) both;
+}
+.tile > * { position: relative; z-index: 1; }
+.tile strong { font-size: 1.05rem; line-height: 1.25; max-width: 85%; }
+.tile-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--uh) 50% 38%); }
+.tile-blurb {
+  font-size: 0.86rem; color: hsl(var(--uh) 20% 36%); max-width: 80%;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tile-meta { margin-top: auto; padding-top: 8px; font-size: 0.76rem; font-weight: 700; color: hsl(var(--uh) 30% 35%); opacity: 0.8; }
+.tile:hover:not(:disabled) { transform: translateY(-4px); box-shadow: 0 14px 28px hsl(var(--uh) 50% 40% / 0.2); }
+.tile:disabled { cursor: default; filter: saturate(0.25); opacity: 0.7; }
+
+/* the main shape (::after) and a small accent dot (::before) */
+.tile::after, .tile::before {
+  content: ""; position: absolute; z-index: 0; pointer-events: none;
+  transition: transform 0.45s var(--ease-out);
+}
+.tile::after {
+  --rot: 0deg; width: 92px; height: 92px; right: -24px; bottom: -28px;
+  background: var(--shape); transform: rotate(var(--rot));
+}
+.tile::before {
+  width: 12px; height: 12px; border-radius: 50%; right: 16px; top: 16px;
+  background: var(--shape-2); opacity: 0.9;
+}
+.tile:hover:not(:disabled)::after { transform: rotate(calc(var(--rot) + 25deg)) scale(1.45); }
+.tile:hover:not(:disabled)::before { transform: translate(-4px, 4px) scale(1.4); }
+
+.shape-circle::after { border-radius: 50%; }
+.shape-diamond::after { --rot: 45deg; width: 78px; height: 78px; right: -18px; bottom: -22px; border-radius: 12px; }
+.shape-triangle::after { clip-path: polygon(50% 4%, 100% 96%, 0 96%); right: -14px; bottom: -18px; --rot: -12deg; }
+.shape-ring::after { border-radius: 50%; background: transparent; border: 18px solid var(--shape); box-sizing: border-box; }
+.shape-hexagon::after { clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); --rot: 10deg; }
+.shape-quarter::after { border-top-left-radius: 100%; right: -6px; bottom: -6px; width: 84px; height: 84px; }
+.shape-pill::after { border-radius: 40px; width: 120px; height: 46px; right: -30px; bottom: 6px; --rot: -35deg; }
+.shape-blob::after { border-radius: 62% 38% 54% 46% / 48% 60% 40% 52%; }
+
+/* the three big home boxes */
+.tile-hub { min-height: 230px; padding: 24px 26px; border-radius: 22px; gap: 6px; }
+.tile-hub strong { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.01em; }
+.tile-hub .tile-blurb { font-size: 0.98rem; max-width: 70%; -webkit-line-clamp: 3; }
+.tile-hub .tile-meta { font-size: 0.85rem; }
+.tile-hub::after { width: 170px; height: 170px; right: -46px; bottom: -54px; }
+.tile-hub::before { width: 22px; height: 22px; right: 26px; top: 26px; }
+.tile-hub.shape-triangle::after { right: -30px; bottom: -36px; }
+@media (prefers-reduced-motion: reduce) { .tile, .tile::after, .tile::before { transition: none; } }
