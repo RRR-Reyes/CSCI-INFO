@@ -234,9 +234,21 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
 
     /** A random number of pulses, 3 to 10, before a pacemaker goes quiet. */
     const pulses = () => 3 + Math.floor(Math.random() * 8);
-    // How many randomly placed pacemakers to keep going at once (6 to 8, picked per visit).
-    const MAX_AUTO = 6 + Math.floor(Math.random() * 3);
+    // How many randomly placed pacemakers to keep going at once (6 to 10, picked per visit).
+    const MAX_AUTO = 6 + Math.floor(Math.random() * 5);
     let pendingAuto = 0; // random pacemakers scheduled but not yet placed
+    const MIN_AUTO = 6; // once the reaction has started, never fewer random pacemakers than this
+
+    /** Place a random pacemaker after a delay (in ms), counting it as present meanwhile. */
+    const scheduleAuto = (delay: number) => {
+      pendingAuto++;
+      timers.push(
+        window.setTimeout(() => {
+          pendingAuto--;
+          if (autoCount() < MAX_AUTO) addPacemaker(0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8, true);
+        }, delay),
+      );
+    };
     const autoCount = () => pacemakers.filter((p) => p.auto).length;
     const MAX_CLICKS = 4; // clicked pacemakers allowed at once, so rings don't get crowded
 
@@ -346,6 +358,8 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
         for (let i = pacemakers.length - 1; i >= 0; i--) {
           if (pacemakers[i].left <= 0 && simTime >= pacemakers[i].until) pacemakers.splice(i, 1);
         }
+        // Replace retired random pacemakers so at least MIN_AUTO keep going.
+        if (started >= 0 && autoCount() + pendingAuto < MIN_AUTO) scheduleAuto(400 + Math.random() * 1600);
       }
       render();
     };
@@ -368,15 +382,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       // The disturbance seeds random pacemakers elsewhere, topping the dish up to MAX_AUTO.
       // They appear one by one over the next several seconds rather than all at once.
       const need = MAX_AUTO - autoCount() - pendingAuto;
-      for (let i = 0; i < need; i++) {
-        pendingAuto++;
-        timers.push(
-          window.setTimeout(() => {
-            pendingAuto--;
-            if (autoCount() < MAX_AUTO) addPacemaker(0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8, true);
-          }, 1500 + i * 1200 + Math.random() * 1500),
-        );
-      }
+      for (let i = 0; i < need; i++) scheduleAuto(1500 + i * 1200 + Math.random() * 1500);
     };
 
     const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting));
