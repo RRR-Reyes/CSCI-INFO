@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import BZReaction from "./BZReaction";
+import { AboutArt, GoalArt, HubShape } from "./HomeArt";
 import { COURSES, findCourse, sectionsOf } from "../courses";
 import type { Course, Unit } from "../courses";
 import { go } from "../useHashRoute";
@@ -86,6 +87,12 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
   const [open, setOpen] = useState<{ hub: Hub; from: DOMRect } | null>(null);
   const close = useCallback(() => setOpen(null), []);
 
+  // Snap scrolling only on the home page; chapters scroll freely.
+  useEffect(() => {
+    document.documentElement.classList.add("snap-home");
+    return () => document.documentElement.classList.remove("snap-home");
+  }, []);
+
   return (
     <div className="home">
       <section className="hero" ref={heroRef}>
@@ -102,19 +109,53 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         <span className="hero-scroll" aria-hidden>↓</span>
       </section>
 
-      <section id="explore" className="courses">
+      <section id="about" className="intro">
+        <header className="intro-bar">
+          <span className="intro-brand">CSCI-INFO</span>
+        </header>
+        <div className="intro-inner">
+          <div className="intro-text">
+            <h2>What is <span>this?</span></h2>
+            <p>
+              CSCI-INFO turns the topics from your CS and IT classes into pictures you can see and play with. Each
+              chapter pairs a short reading with a visual that moves when you do.
+            </p>
+          </div>
+          <AboutArt />
+        </div>
+        <span className="intro-mouse" aria-hidden />
+      </section>
+
+      <section id="goal" className="intro is-flipped">
+        <div className="intro-inner">
+          <div className="intro-text">
+            <h2>The <span>goal</span></h2>
+            <p>
+              Give students a visual for every topic covered in class, and keep it free for anyone who wants to
+              learn. No account, no paywall, on any device.
+            </p>
+          </div>
+          <GoalArt />
+        </div>
+        <span className="intro-mouse" aria-hidden />
+      </section>
+
+      <section id="explore" className="boxes">
+        <div className="boxes-inner">
         <div className="hubs">
-          {HUBS.map((hub, i) => (
+          {HUBS.map((hub) => (
             <button
               key={hub.id}
-              className={`tile tile-hub ${hub.shape}`}
-              style={tileStyle(hub.hue, i)}
+              className="hub"
+              style={{ "--h": hub.hue } as CSSProperties}
               onClick={(e) => setOpen({ hub, from: e.currentTarget.getBoundingClientRect() })}
             >
-              <span className="tile-label">{hub.label}</span>
-              <strong>{hub.title}</strong>
-              <span className="tile-blurb">{hub.blurb}</span>
-              <span className="tile-meta">{hub.meta}</span>
+              <span className="hub-label">{hub.label}</span>
+              <strong className="hub-title">{hub.title}</strong>
+              <span className="hub-blurb">{hub.blurb}</span>
+              <span className="hub-meta">{hub.meta}</span>
+              <span className="hub-bead" aria-hidden />
+              <HubShape shape={hub.shape} id={hub.id} />
             </button>
           ))}
         </div>
@@ -126,6 +167,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
             (Brown University). Built with React.
           </p>
         </footer>
+        </div>
       </section>
 
       {open && <HubPanel hub={open.hub} from={open.from} onClose={close} />}

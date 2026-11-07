@@ -75,12 +75,265 @@ kbd { font-family: var(--mono); font-size: 0.75em; padding: 1px 5px; border: 1px
 .brand { font-weight: 800; letter-spacing: 0.02em; color: #fff; text-decoration: none; }
 .hero-copy { position: relative; z-index: 1; text-align: center; padding: 0 16px; animation: rise 1s var(--ease-out) both; text-shadow: 0 2px 18px rgba(40, 8, 0, 0.45); }
 .hero-nav { text-shadow: 0 1px 8px rgba(40, 8, 0, 0.4); }
-.hero-copy h1 { font-size: clamp(2.6rem, 7vw, 4.6rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+/* title and tagline in the same Inter Display as "What is this?" */
+.hero-copy h1, .hero-copy p { font-family: "Inter Variable", "Inter", system-ui, "Segoe UI", sans-serif; }
+.hero-copy h1 { font-size: clamp(2.8rem, 7.5vw, 5.2rem); font-weight: 760; letter-spacing: -0.045em; line-height: 1; }
 .hero-copy p { margin: 14px auto 28px; max-width: 34ch; font-size: 1.15rem; opacity: 0.82; }
 .btn-hero { background: #fff; color: var(--night); padding: 12px 34px; font-size: 1rem; }
 .hero-scroll { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); opacity: 0.6; animation: bob 2.4s ease-in-out infinite; }
 
-.courses { max-width: 1180px; margin: 0 auto; padding: 72px 32px 40px; }
+/* ---------- "What is this?" and "The goal": one screen each between the hero and the boxes ----------
+   A pale stage with one large soft arc, a two-tone headline in Inter, and the visuals on
+   tilted frosted cards (HomeArt.tsx) in the home boxes' hues. */
+.intro {
+  --i-ink: #0e0f13; --i-ink-2: #4a4e5a; --i-ink-3: #8a8d99;
+  --i-font: "Inter Variable", "Inter", system-ui, "Segoe UI", sans-serif;
+  position: relative; overflow: hidden; isolation: isolate;
+  min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column;
+  background: #f7f7fa; color: var(--i-ink); font-family: var(--i-font);
+}
+/* the arc: a huge disc of frosted glass whose edge sweeps from the bottom left up through
+   the top, with a bright rim, an inner highlight and a second rim inside it for thickness */
+.intro::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  width: 150vmax; height: 150vmax; border-radius: 50%;
+  left: 32%; top: -18%;
+  background: linear-gradient(200deg, rgba(236, 239, 252, 0.95) 0%, rgba(221, 227, 250, 0.8) 45%, rgba(234, 238, 252, 0.9) 100%);
+  border: 1.5px solid #fff;
+  outline: 1px solid rgba(255, 255, 255, 0.75); outline-offset: -18px;
+  box-shadow:
+    inset 0 2px 0 #fff,
+    inset 30px 40px 80px rgba(255, 255, 255, 0.7),
+    inset -40px -50px 120px rgba(110, 128, 215, 0.16),
+    -24px 36px 90px -30px rgba(80, 96, 172, 0.25);
+}
+.intro.is-flipped::before {
+  left: auto; right: 32%; top: -30%;
+  background: linear-gradient(160deg, rgba(236, 249, 243, 0.95) 0%, rgba(218, 240, 230, 0.8) 45%, rgba(234, 247, 241, 0.9) 100%);
+  box-shadow:
+    inset 0 2px 0 #fff,
+    inset -30px 40px 80px rgba(255, 255, 255, 0.7),
+    inset 40px -50px 120px rgba(70, 160, 125, 0.16),
+    24px 36px 90px -30px rgba(50, 130, 100, 0.22);
+}
+
+.intro-bar {
+  width: min(1560px, calc(100% - 128px)); margin: 0 auto; padding: 30px 0 22px;
+  border-bottom: 1px solid rgba(14, 15, 19, 0.1);
+}
+.intro-brand { font-weight: 700; font-size: 1.35rem; letter-spacing: -0.03em; }
+
+.intro-inner {
+  flex: 1; width: min(1560px, calc(100% - 128px)); margin: 0 auto; padding: 48px 0 96px;
+  display: grid; grid-template-columns: 5fr 6fr; align-items: center; gap: 48px;
+}
+.intro.is-flipped .intro-inner { grid-template-columns: 6fr 5fr; }
+.intro.is-flipped .art-stage { order: -1; }
+.intro-text h2 {
+  font-size: clamp(3.4rem, 9vw, 9.5rem); font-weight: 760; line-height: 0.9; letter-spacing: -0.045em;
+}
+.intro-text h2 span { display: block; color: var(--i-ink-3); }
+.intro-text p {
+  margin-top: clamp(28px, 4vh, 48px); max-width: 33ch;
+  font-size: clamp(1.15rem, 1.6vw, 1.5rem); line-height: 1.45; letter-spacing: -0.01em; color: var(--i-ink-2);
+}
+.intro ::selection { background: hsl(228 95% 80%); color: var(--i-ink); }
+
+/* the little mouse that says "keep scrolling" */
+.intro-mouse {
+  position: absolute; left: 50%; bottom: 28px; width: 24px; height: 38px; margin-left: -12px;
+  border: 1.5px solid rgba(14, 15, 19, 0.55); border-radius: 12px;
+}
+.intro-mouse::after {
+  content: ""; position: absolute; left: 50%; top: 8px; width: 3px; height: 7px; margin-left: -1.5px;
+  border-radius: 2px; background: rgba(14, 15, 19, 0.7); animation: mouse-wheel 1.8s ease-in-out infinite;
+}
+@keyframes mouse-wheel { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(9px); opacity: 0; } 100% { transform: translateY(0); opacity: 0; } }
+
+/* On the home page each screen (hero, what is this, the goal, the boxes) is a snap point,
+   so a scroll always lands on one whole section. Home.tsx adds .snap-home to <html>. */
+html.snap-home { scroll-snap-type: y mandatory; }
+.snap-home .hero, .snap-home .intro, .snap-home .boxes { scroll-snap-align: start; }
+
+/* thick frosted-glass cards, laid out like the reference mockup */
+.art-stage { position: relative; width: 100%; max-width: 760px; aspect-ratio: 705 / 560; justify-self: center; }
+.glass {
+  position: absolute; border-radius: 34px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 248, 253, 0.88) 50%, rgba(234, 237, 248, 0.84) 100%);
+  border: 1px solid #fff;
+  box-shadow:
+    inset 0 1.5px 0 #fff,
+    inset 0 -10px 24px -12px rgba(110, 120, 175, 0.18),
+    0 2px 1px rgba(196, 201, 226, 0.9),
+    0 44px 80px -26px rgba(66, 76, 140, 0.3),
+    0 16px 32px -16px rgba(66, 76, 140, 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+}
+.glass svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.glass text { font-family: var(--i-font); text-anchor: middle; }
+.ia-ring { fill: none; stroke: #2a3150; stroke-width: 1.5; }
+
+.card-main {
+  left: 1%; top: 24%; width: 84%; height: 70%; padding: 5% 6% 9%; z-index: 1;
+  transform: rotate(-5deg);
+}
+/* both circles share one faint tint, so only the highlighted region (∩, ∪ or −) carries color */
+.venn-tint { fill: hsl(228 100% 97%); }
+.venn-letter { font-size: 46px; font-weight: 500; fill: #2a3150; }
+.venn-chip {
+  left: 47%; top: 78%; z-index: 3; transform: translateX(-50%) rotate(-5deg);
+  min-width: 132px; height: 58px; padding: 0 26px; border-radius: 999px;
+  display: grid; place-items: center; font: 500 1.65rem/1 var(--i-font); letter-spacing: 0.02em; color: #2a3150;
+}
+.venn-chip > span { grid-area: 1 / 1; }
+
+.card-bits {
+  left: 2%; top: 12%; z-index: 2; padding: 12px; border-radius: 24px;
+  display: flex; gap: 10px; transform: rotate(-4deg);
+}
+.ia-key {
+  width: clamp(38px, 4.4vw, 54px); aspect-ratio: 1 / 1.08; display: grid; place-items: center; border-radius: 14px;
+  background: linear-gradient(180deg, #fff 0%, hsl(158 70% 96%) 60%, hsl(158 55% 90%) 100%);
+  border: 1px solid #fff;
+  box-shadow: inset 0 -3px 0 hsl(158 40% 82% / 0.8), 0 8px 14px -6px rgba(40, 90, 75, 0.3), 0 1px 2px rgba(40, 90, 75, 0.15);
+  font: 500 clamp(1.2rem, 2.2vw, 1.9rem)/1 var(--i-font); color: hsl(160 45% 18%);
+}
+.ia-key > span { grid-area: 1 / 1; }
+
+.card-tree { left: 60%; top: 0; width: 39%; height: 42%; padding: 4% 4%; z-index: 2; transform: rotate(9deg); border-radius: 30px; }
+.tree-edge { stroke: #2a3150; stroke-width: 1.5; fill: none; }
+.tree-node circle { fill: url(#ha-node); stroke: #2a3150; stroke-width: 1.5; }
+.tree-node text { font-size: 24px; font-weight: 500; fill: #2a3150; }
+
+.card-laptop {
+  left: 2%; top: 16%; width: 78%; height: 62%; padding: 3.5%; z-index: 1;
+  transform: rotate(4deg);
+}
+.card-laptop .lines rect { fill: hsl(158 25% 82%); }
+.card-laptop .lines rect:first-child { fill: hsl(158 30% 70%); }
+.card-phone { left: 70%; top: 34%; width: 25%; height: 60%; padding: 2.4%; z-index: 2; transform: rotate(-7deg); border-radius: 36px; }
+.card-phone .notch { fill: rgba(42, 49, 80, 0.18); }
+.card-phone circle { fill: #fff; stroke: #2a3150; stroke-width: 1.5; }
+
+/* Each card moves slowly: the Venn steps through ∩, ∪ and −, one bit flips, the laptop's
+   Venn breathes, and the phone's tree fills in from the leaves up. */
+.art-step { animation: art-step 9s infinite; }
+.art-step.s2 { animation-delay: -6s; }
+.art-step.s3 { animation-delay: -3s; }
+@keyframes art-step { 0%, 30% { opacity: 1; } 36%, 94% { opacity: 0; } 100% { opacity: 1; } }
+.art-flip { animation: art-step 4s infinite; }
+.art-flip.f1 { animation-delay: -2s; }
+.art-pulse { animation: art-pulse 4.5s ease-in-out infinite; }
+.art-pulse.is-b { animation-delay: -2.25s; }
+@keyframes art-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.card-phone circle { animation: art-fill 6s infinite; }
+.card-phone circle.lv1 { animation-delay: 0.6s; }
+.card-phone circle.lv2 { animation-delay: 1.2s; }
+@keyframes art-fill { 0%, 10% { fill: #fff; } 20%, 75% { fill: hsl(24 100% 80%); } 90%, 100% { fill: #fff; } }
+@media (prefers-reduced-motion: reduce) {
+  .art-step, .art-flip, .art-pulse, .card-phone circle, .intro-mouse::after { animation: none !important; }
+  .art-step.s2, .art-step.s3, .art-flip.f1 { opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .intro-bar, .intro-inner { width: calc(100% - 32px); }
+  .intro-bar { padding: 20px 0 16px; }
+  .intro-inner, .intro.is-flipped .intro-inner { grid-template-columns: 1fr; gap: 24px; padding: 32px 0 88px; align-content: center; }
+  .intro.is-flipped .art-stage { order: 0; }
+  .art-stage { max-width: 460px; }
+  .card-bits { padding: 8px; gap: 6px; border-radius: 16px; }
+  .ia-key { border-radius: 10px; }
+  .intro-text h2 { font-size: clamp(3.2rem, 15vw, 5rem); }
+  .glass { border-radius: 20px; }
+  .venn-chip { min-width: 92px; height: 40px; padding: 0 16px; font-size: 1.1rem; }
+}
+/* ---------- the three home boxes: glass cards over a frosted semicircle ---------- */
+.boxes {
+  position: relative; overflow: hidden; isolation: isolate;
+  min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: center;
+  padding: 72px 0 40px; background: #f7f7fa;
+  font-family: "Inter Variable", "Inter", system-ui, "Segoe UI", sans-serif;
+}
+/* the semicircle: the same glass as the arcs behind "What is this?" and "The goal" */
+.boxes::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  width: 140vmax; height: 140vmax; border-radius: 50%; left: 50%; top: 38%; transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(244, 238, 252, 0.95) 0%, rgba(232, 228, 250, 0.8) 40%, rgba(240, 238, 252, 0.9) 100%);
+  border: 1.5px solid #fff; outline: 1px solid rgba(255, 255, 255, 0.75); outline-offset: -18px;
+  box-shadow:
+    inset 0 2px 0 #fff,
+    inset 0 40px 80px rgba(255, 255, 255, 0.7),
+    inset 0 -60px 120px rgba(120, 110, 215, 0.14),
+    0 -30px 90px -30px rgba(90, 80, 170, 0.22);
+}
+.boxes-inner { width: min(1280px, calc(100% - 64px)); margin: 0 auto; }
+.boxes .hubs { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.boxes .home-foot { margin-top: 64px; border-top-color: rgba(14, 15, 19, 0.1); color: #8a8d99; font-size: 0.9rem; }
+.boxes .home-foot a { text-underline-offset: 3px; }
+
+/* a frosted card tinted with its hue (--h) */
+.hub {
+  position: relative; overflow: hidden; isolation: isolate; text-align: left;
+  min-height: 380px; padding: 34px 34px 30px; border-radius: 32px;
+  display: flex; flex-direction: column; gap: 10px; color: hsl(var(--h) 45% 16%);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.95) 0%, hsl(var(--h) 90% 97% / 0.85) 45%, hsl(var(--h) 85% 92% / 0.8) 100%);
+  border: 1px solid #fff;
+  box-shadow:
+    inset 0 1.5px 0 #fff,
+    inset 0 -14px 30px -14px hsl(var(--h) 60% 50% / 0.18),
+    0 2px 1px hsl(var(--h) 40% 80% / 0.9),
+    0 40px 70px -28px hsl(var(--h) 55% 40% / 0.32),
+    0 14px 28px -14px hsl(var(--h) 55% 40% / 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  transition: transform 260ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 260ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hub:active { transform: scale(0.98); }
+.hub:focus-visible { outline: 2px solid hsl(var(--h) 70% 50%); outline-offset: 4px; border-radius: 32px; }
+.hub > :not(.hub-shape):not(.hub-bead) { position: relative; z-index: 1; }
+.hub-label { font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--h) 55% 40%); }
+.hub-title { font-size: clamp(2rem, 3vw, 2.6rem); font-weight: 760; letter-spacing: -0.04em; line-height: 1.05; }
+.hub-blurb { font-size: 1.15rem; line-height: 1.5; color: hsl(var(--h) 18% 34%); max-width: 21ch; letter-spacing: -0.01em; }
+.hub-meta {
+  margin-top: auto; align-self: flex-start; padding: 7px 14px; border-radius: 999px;
+  font-size: 0.9rem; font-weight: 600; color: hsl(var(--h) 40% 28%);
+  background: rgba(255, 255, 255, 0.6); border: 1px solid #fff;
+  box-shadow: 0 6px 14px -8px hsl(var(--h) 50% 40% / 0.35);
+}
+
+/* the corner shape and the small dot, which zoom and turn on hover */
+.hub-shape {
+  position: absolute; right: -40px; bottom: -48px; width: 230px; height: 230px; z-index: 0; pointer-events: none;
+  transition: transform 450ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hub-shape svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 18px 24px hsl(var(--h) 60% 40% / 0.25)); }
+.hub-shape-from { stop-color: hsl(calc(var(--h) + 4) 95% 85%); stop-opacity: 0.95; }
+.hub-shape-to { stop-color: hsl(calc(var(--h) + 8) 75% 68%); stop-opacity: 0.85; }
+.hub-bead {
+  position: absolute; right: 30px; top: 30px; width: 30px; height: 30px; border-radius: 50%; z-index: 0;
+  background: hsl(calc(var(--h) + 40) 80% 84%);
+  box-shadow: 0 6px 12px -6px hsl(calc(var(--h) + 40) 60% 40% / 0.3);
+  transition: transform 450ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hub:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      inset 0 1.5px 0 #fff,
+      inset 0 -14px 30px -14px hsl(var(--h) 60% 50% / 0.18),
+      0 2px 1px hsl(var(--h) 40% 80% / 0.9),
+      0 56px 90px -30px hsl(var(--h) 55% 40% / 0.4),
+      0 18px 34px -16px hsl(var(--h) 55% 40% / 0.24);
+  }
+  .hub:hover .hub-shape { transform: rotate(25deg) scale(1.45); }
+  .hub:hover .hub-bead { transform: translate(-4px, 4px) scale(1.4); }
+}
+@media (max-width: 900px) {
+  .boxes-inner { width: calc(100% - 32px); }
+  .boxes .hubs { grid-template-columns: 1fr; gap: 18px; }
+  .hub { min-height: 240px; padding: 26px; border-radius: 26px; }
+  .hub-shape { width: 170px; height: 170px; right: -30px; bottom: -40px; }
+}
+@media (prefers-reduced-motion: reduce) { .hub, .hub-shape, .hub-bead { transition: none; } }
 .courses-head h2 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.01em; }
 .courses-head p { color: var(--ink-3); margin-top: 4px; }
 .course-row { margin-top: 48px; }
@@ -868,7 +1121,6 @@ svg text { font-family: var(--font); }
   .rng-sliders, .rel-badges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
-  .courses { padding: 48px 16px 32px; }
   .hero-nav { padding: 16px; }
   .course-row-head { flex-direction: column; align-items: flex-start; }
   .unit-tiles { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
@@ -1439,14 +1691,6 @@ svg text { font-family: var(--font); }
 .shape-pill::after { border-radius: 40px; width: 120px; height: 46px; right: -30px; bottom: 6px; --rot: -35deg; }
 .shape-blob::after { border-radius: 62% 38% 54% 46% / 48% 60% 40% 52%; }
 
-/* the three big home boxes */
-.tile-hub { min-height: 230px; padding: 24px 26px; border-radius: 22px; gap: 6px; }
-.tile-hub strong { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.01em; }
-.tile-hub .tile-blurb { font-size: 0.98rem; max-width: 70%; -webkit-line-clamp: 3; }
-.tile-hub .tile-meta { font-size: 0.85rem; }
-.tile-hub::after { width: 170px; height: 170px; right: -46px; bottom: -54px; }
-.tile-hub::before { width: 22px; height: 22px; right: 26px; top: 26px; }
-.tile-hub.shape-triangle::after { right: -30px; bottom: -36px; }
 @media (prefers-reduced-motion: reduce) { .tile, .tile::after, .tile::before { transition: none; } }
 
 /* wide tiles: one per row in the Set Theory and Playground boxes */
