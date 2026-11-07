@@ -82,7 +82,7 @@ const HUBS: Hub[] = [
   },
 ];
 
-export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
+export default function Home() {
   const heroRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState<{ hub: Hub; from: DOMRect } | null>(null);
   const close = useCallback(() => setOpen(null), []);
@@ -99,7 +99,6 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         <BZReaction host={heroRef} />
         <nav className="hero-nav">
           <a className="brand" href="https://github.com/RRR-Reyes" target="_blank" rel="noreferrer">RRR-Reyes</a>
-          <button className="link-btn" onClick={onOpenPicker}>All chapters</button>
         </nav>
         <div className="hero-copy">
           <h1>CSCI-INFO</h1>
@@ -109,10 +108,15 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         <span className="hero-scroll" aria-hidden>↓</span>
       </section>
 
-      <section id="about" className="intro">
-        <header className="intro-bar">
+      {/* The white screens after the hero share one bar that sticks to the top until the hero comes back. */}
+      <div className="white-run">
+      <header className="intro-bar">
+        <div className="intro-bar-inner">
           <span className="intro-brand">CSCI-INFO</span>
-        </header>
+        </div>
+      </header>
+
+      <section id="about" className="intro">
         <div className="intro-inner">
           <div className="intro-text">
             <h2>What is <span>This?</span></h2>
@@ -129,7 +133,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
       <section id="goal" className="intro is-flipped">
         <div className="intro-inner">
           <div className="intro-text">
-            <h2>The <span>Goal</span></h2>
+            <h2>The Ultimate <span>Goal</span></h2>
             <p>
               Give students a visual for every topic covered in class, and keep it free for anyone who wants to
               learn. No account, no paywall, on any device.
@@ -169,6 +173,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         </footer>
         </div>
       </section>
+      </div>
 
       {open && <HubPanel hub={open.hub} from={open.from} onClose={close} />}
     </div>

@@ -28,7 +28,7 @@ export default function App() {
       {course ? (
         <CoursePage course={course} unitId={unitId} onOpenPicker={openPicker} />
       ) : (
-        <Home onOpenPicker={openPicker} />
+        <Home />
       )}
       <ChapterPicker open={pickerOpen} onClose={closePicker} currentCourse={course?.id} currentUnit={unitId} />
     </>
