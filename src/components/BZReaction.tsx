@@ -26,7 +26,7 @@ uniform sampler2D s;
 uniform ivec2 res;
 uniform float dt, D, eps, a, b, k;
 uniform int n;
-uniform vec3 stim[8];
+uniform vec3 stim[16];
 out vec4 o;
 vec2 at(ivec2 q) { return texelFetch(s, clamp(q, ivec2(0), res - 1), 0).xy; }
 void main() {
@@ -39,7 +39,7 @@ void main() {
   float th = (v + b) / a;
   float un = u + dt * (u * (1.0 - u) * (u - th) / eps + D * lap);
   float vn = v + dt * k * (u - v);
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= n) break;
     float d = distance(vec2(q) + 0.5, stim[i].xy);
     un = max(un, 1.0 - smoothstep(stim[i].z - 1.0, stim[i].z, d));
@@ -104,7 +104,7 @@ void main() {
   o = vec4(pow(max(col, 0.0), vec3(0.95)), 1.0);
 }`;
 
-type Pacemaker = { x: number; y: number; period: number; next: number; until: number };
+type Pacemaker = { x: number; y: number; period: number; next: number; until: number; left: number; auto: boolean };
 type RGB = [number, number, number];
 type Palette = { rest: RGB; tail: RGB; ring: RGB; tailAmt: number };
 
@@ -232,11 +232,37 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     let started = -1; // real time of the first click
     const bubbles: { x: number; y: number; r: number; born: number }[] = [];
 
-    const addPacemaker = (x: number, y: number) => {
+    /** A random number of pulses, 3 to 10, before a pacemaker goes quiet. */
+    const pulses = () => 3 + Math.floor(Math.random() * 8);
+    // Randomly placed pacemakers never number more than this at once (4 to 8, picked per visit).
+    const MAX_AUTO = 4 + Math.floor(Math.random() * 5);
+    const autoCount = () => pacemakers.filter((p) => p.auto).length;
+
+    /**
+     * True once the liquid around a pacemaker has recovered. Firing into a wave's tail would
+     * break the new ring into a spiral, and spirals never die out on their own.
+     */
+    const probe = new Float32Array(23 * 23 * 4);
+    const ready = (pm: Pacemaker) => {
+      const R = 11;
+      const cx = Math.round(pm.x * cols);
+      const cy = Math.round((1 - pm.y) * rows);
+      const x0 = Math.max(0, cx - R);
+      const y0 = Math.max(0, cy - R);
+      const w = Math.min(cols, cx + R + 1) - x0;
+      const h = Math.min(rows, cy + R + 1) - y0;
+      if (w <= 0 || h <= 0) return true;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[src]);
+      gl.readPixels(x0, y0, w, h, gl.RGBA, gl.FLOAT, probe);
+      for (let i = 0; i < w * h; i++) if (probe[i * 4] > 0.2 || probe[i * 4 + 1] > 0.15) return false;
+      return true;
+    };
+
+    const addPacemaker = (x: number, y: number, auto: boolean) => {
       // Real pacemakers fire at slightly different rates, which is what gives the cusps
       // where two families of rings collide.
-      pacemakers.push({ x, y, period: 2.0 + Math.random() * 0.8, next: simTime, until: -1 });
-      if (pacemakers.length > 14) pacemakers.shift();
+      // Each pacemaker sends out 3 to 10 rings and then goes quiet, so the dish clears.
+      pacemakers.push({ x, y, period: 2.0 + Math.random() * 0.8, next: simTime, until: -1, left: pulses(), auto });
     };
 
     const step = (stims: number[][]) => {
@@ -301,14 +327,23 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       while (steps-- > 0) {
         const stims: number[][] = [];
         for (const pm of pacemakers) {
-          if (simTime >= pm.next) {
+          if (simTime >= pm.next && pm.left > 0) {
+            if (!ready(pm)) {
+              pm.next = simTime + 0.05; // still recovering here; try again shortly
+              continue;
+            }
             pm.until = simTime + 0.1; // hold the stimulus briefly so the wave can take hold
             pm.next = simTime + pm.period;
+            pm.left--;
           }
-          if (simTime < pm.until && stims.length < 8) stims.push([pm.x * cols, (1 - pm.y) * rows, 7]);
+          if (simTime < pm.until && stims.length < 16) stims.push([pm.x * cols, (1 - pm.y) * rows, 7]);
         }
         step(stims);
         simTime += P.dt;
+        // Retire pacemakers that have fired their last ring.
+        for (let i = pacemakers.length - 1; i >= 0; i--) {
+          if (pacemakers[i].left <= 0 && simTime >= pacemakers[i].until) pacemakers.splice(i, 1);
+        }
       }
       render();
     };
@@ -318,20 +353,19 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       const box = canvas.getBoundingClientRect();
       const x = (e.clientX - box.left) / box.width;
       const y = (e.clientY - box.top) / box.height;
-      addPacemaker(x, y);
+      addPacemaker(x, y, false); // clicks are never limited
       if (started < 0) {
         started = realTime;
         for (let i = 0; i < 40; i++) {
           bubbles.push({ x: Math.random(), y: Math.random(), r: 1.5 + Math.random() ** 3 * 4, born: realTime + 4 + Math.random() * 90 });
         }
       }
-      // The disturbance seeds new pacemakers elsewhere in the dish over the next seconds.
-      const spawn = 1 + Math.floor(Math.random() * 2);
-      for (let i = 0; i < spawn; i++) {
-        timers.push(
-          window.setTimeout(() => addPacemaker(0.05 + Math.random() * 0.9, 0.05 + Math.random() * 0.9), 1800 + Math.random() * 3500),
-        );
-      }
+      // The disturbance seeds one pacemaker elsewhere, unless enough random ones are already going.
+      timers.push(
+        window.setTimeout(() => {
+          if (autoCount() < MAX_AUTO) addPacemaker(0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8, true);
+        }, 1800 + Math.random() * 3500),
+      );
     };
 
     const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting));
