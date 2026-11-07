@@ -55,8 +55,6 @@ uniform vec2 view;
 uniform float time;
 uniform vec3 rest, tailC, ringC;
 uniform float tailAmt;
-uniform int nb;
-uniform vec4 bub[40];
 out vec4 o;
 vec2 at(ivec2 q) { return texelFetch(s, clamp(q, ivec2(0), res - 1), 0).xy; }
 vec2 field(vec2 uv) {
@@ -79,22 +77,6 @@ void main() {
   float tail = smoothstep(0.04, 0.5, v) * (1.0 - ring);
   vec3 col = mix(rest, tailC, tail * tailAmt);
   col = mix(col, ringC, ring);
-
-  // Gas bubbles sitting in the dish: refracting, with a dark rim and a tiny highlight.
-  vec2 px = gl_FragCoord.xy;
-  for (int i = 0; i < 40; i++) {
-    if (i >= nb) break;
-    vec4 bb = bub[i];
-    float d = distance(px, bb.xy) / bb.z;
-    if (d < 1.15) {
-      float body = 1.0 - smoothstep(0.85, 1.0, d);
-      float rim = smoothstep(0.55, 0.95, d) * body;
-      float hl = 1.0 - smoothstep(0.0, 0.32, distance(px, bb.xy + vec2(-0.35, 0.35) * bb.z) / bb.z);
-      col = mix(col, col * 1.08 + 0.03, body * 0.5 * bb.w);
-      col = mix(col, col * 0.55, rim * 0.6 * bb.w);
-      col = mix(col, vec3(1.0), hl * 0.8 * bb.w);
-    }
-  }
 
   // Back-lit dish: brighter centre, soft vignette, a little film grain.
   vec2 qv = (uv - 0.5) * vec2(view.x / view.y, 1.0);
@@ -216,7 +198,6 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
         rows = r;
         alloc();
         pacemakers.length = 0;
-        bubbles.length = 0;
         started = -1;
       }
     };
@@ -230,10 +211,9 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     let last = 0;
     let visible = true;
     let started = -1; // real time of the first click
-    const bubbles: { x: number; y: number; r: number; born: number }[] = [];
 
-    /** A random number of pulses, 3 to 10, before a pacemaker goes quiet. */
-    const pulses = () => 3 + Math.floor(Math.random() * 8);
+    /** A random number of pulses, 6 to 10, before a pacemaker goes quiet. */
+    const pulses = () => 6 + Math.floor(Math.random() * 5);
     // How many randomly placed pacemakers to keep going at once (6 to 10, picked per visit).
     const MAX_AUTO = 6 + Math.floor(Math.random() * 5);
     let pendingAuto = 0; // random pacemakers scheduled but not yet placed
@@ -275,7 +255,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     const addPacemaker = (x: number, y: number, auto: boolean) => {
       // Real pacemakers fire at slightly different rates, which is what gives the cusps
       // where two families of rings collide.
-      // Each pacemaker sends out 3 to 10 rings and then goes quiet, so the dish clears.
+      // Each pacemaker sends out 6 to 10 rings and then goes quiet, so the dish clears.
       pacemakers.push({ x, y, period: 2.0 + Math.random() * 0.8, next: simTime, until: -1, left: pulses(), auto });
     };
 
@@ -314,18 +294,6 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       gl.uniform3fv(view.u("tailC"), pal.tail);
       gl.uniform3fv(view.u("ringC"), pal.ring);
       gl.uniform1f(view.u("tailAmt"), pal.tailAmt);
-      // Bubbles of CO2 slowly form once the reaction is going.
-      const dpr = canvas.width / canvas.clientWidth;
-      const live = bubbles.filter((b) => realTime > b.born);
-      gl.uniform1i(view.u("nb"), live.length);
-      if (live.length) {
-        gl.uniform4fv(
-          view.u("bub"),
-          new Float32Array(
-            live.flatMap((b) => [b.x * canvas.width, (1 - b.y) * canvas.height, b.r * dpr, Math.min(1, (realTime - b.born) / 3)]),
-          ),
-        );
-      }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
 
@@ -375,9 +343,6 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
       addPacemaker(x, y, false);
       if (started < 0) {
         started = realTime;
-        for (let i = 0; i < 40; i++) {
-          bubbles.push({ x: Math.random(), y: Math.random(), r: 1.5 + Math.random() ** 3 * 4, born: realTime + 4 + Math.random() * 90 });
-        }
       }
       // The disturbance seeds random pacemakers elsewhere, topping the dish up to MAX_AUTO.
       // They appear one by one over the next several seconds rather than all at once.
