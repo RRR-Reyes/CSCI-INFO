@@ -103,7 +103,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         </nav>
         <div className="hero-copy">
           <h1>CSCI-INFO</h1>
-          <p>Computer science you can see: scroll through each idea and play with it.</p>
+          <p>Beyond classroom topics and deeper into informatics</p>
           <a className="btn btn-hero" href="#explore">Start</a>
         </div>
         <span className="hero-scroll" aria-hidden>↓</span>
@@ -115,7 +115,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
         </header>
         <div className="intro-inner">
           <div className="intro-text">
-            <h2>What is <span>this?</span></h2>
+            <h2>What is <span>This?</span></h2>
             <p>
               CSCI-INFO turns the topics from your CS and IT classes into pictures you can see and play with. Each
               chapter pairs a short reading with a visual that moves when you do.
@@ -129,7 +129,7 @@ export default function Home({ onOpenPicker }: { onOpenPicker: () => void }) {
       <section id="goal" className="intro is-flipped">
         <div className="intro-inner">
           <div className="intro-text">
-            <h2>The <span>goal</span></h2>
+            <h2>The <span>Goal</span></h2>
             <p>
               Give students a visual for every topic covered in class, and keep it free for anyone who wants to
               learn. No account, no paywall, on any device.
