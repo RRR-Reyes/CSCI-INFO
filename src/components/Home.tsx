@@ -21,7 +21,10 @@ const courseTileHue = (c: Course, i: number) => (c.hue + (i - (c.units.length - 
 const shapeOf = (i: number) => `shape-${SHAPES[i % SHAPES.length]}`;
 
 /** One entry inside an opened box: a chapter or a tool, or a placeholder for one still to come. */
-type Item = { title: string; note: string; to?: [string, string] };
+type Item = { title: string; note: string; to?: [string, string]; glyph?: string };
+
+/** The notation each chapter is about, drawn large on its tile. */
+const GLYPHS: Record<string, string> = { operations: "A ∪ B", cardinality: "|A|", concepts: "A ⊆ B", cartesian: "A × B" };
 
 /** One-line descriptions for chapter tiles, keyed by section id. */
 const SHORT_NOTES: Record<string, string> = {
@@ -35,7 +38,7 @@ const SHORT_NOTES: Record<string, string> = {
 function unitItems(courseId: string, unitId: string): Item[] {
   const unit = findCourse(courseId)?.units.find((u) => u.id === unitId);
   if (!unit) return [];
-  return sectionsOf(unit).map((s) => ({ title: s.title, note: SHORT_NOTES[s.id] ?? "", to: [courseId, unitId] }));
+  return sectionsOf(unit).map((s) => ({ title: s.title, note: SHORT_NOTES[s.id] ?? "", to: [courseId, unitId], glyph: GLYPHS[s.id] }));
 }
 
 type Hub = { id: string; label: string; title: string; blurb: string; meta: string; hue: number; shape: string; items?: () => Item[] };
@@ -61,10 +64,10 @@ const HUBS: Hub[] = [
     hue: 158,
     shape: "shape-triangle",
     items: () => [
-      { title: "Expression Trees", note: "Type an expression and watch it evaluate from the leaves up.", to: ["discrete", "logic"] },
-      { title: "Truth Tables", note: "Any expression, one column per step.", to: ["discrete", "logic"] },
-      { title: "Logic Lab", note: "Check equivalences and play with quantifiers.", to: ["discrete", "logic"] },
-      { title: "Pseudocode", note: "Step through pseudocode line by line." },
+      { title: "Expression Trees", note: "Type an expression and watch it evaluate from the leaves up.", to: ["discrete", "logic"], glyph: "(3+4)×2" },
+      { title: "Truth Tables", note: "Any expression, one column per step.", to: ["discrete", "logic"], glyph: "T F" },
+      { title: "Logic Lab", note: "Check equivalences and play with quantifiers.", to: ["discrete", "logic"], glyph: "p → q" },
+      { title: "Pseudocode", note: "Step through pseudocode line by line.", glyph: "if … then" },
     ],
   },
   {
@@ -171,11 +174,11 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
 
         <div className="hub-panel-body">
           {items ? (
-            <div className="tile-grid">
+            <div className="tile-stack">
               {items.map((it, i) => (
                 <button
                   key={it.title}
-                  className={`tile ${shapeOf(i)}`}
+                  className={`tile tile-wide ${shapeOf(i)}`}
                   style={tileStyle(PALETTE[i % PALETTE.length], i)}
                   disabled={!it.to}
                   onClick={() => it.to && go(...it.to)}
@@ -183,6 +186,8 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
                   <span className="tile-label">{it.to ? `${hub.id === "sets" ? "Chapter" : "Tool"} ${i + 1}` : "Coming soon"}</span>
                   <strong>{it.title}</strong>
                   {it.note && <span className="tile-blurb">{it.note.replace(/\\[()]/g, "")}</span>}
+                  <span className="tile-meta">{it.to ? "Open →" : "In the works"}</span>
+                  <Deco i={i} glyph={it.glyph} />
                 </button>
               ))}
             </div>
@@ -216,5 +221,21 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Extra decoration that fills the right side of a wide tile: the topic's
+ * notation in large type, a dot grid, an outlined shape and a small chip.
+ * The arrangement shifts with the tile's position so no two rows look alike.
+ */
+function Deco({ i, glyph }: { i: number; glyph?: string }) {
+  return (
+    <span className={`deco deco-${i % 3}`} aria-hidden>
+      {glyph && <span className="deco-glyph">{glyph}</span>}
+      <span className="deco-dots" />
+      <span className={`deco-outline ${shapeOf(i + 3)}`} />
+      <span className={`deco-chip ${shapeOf(i + 5)}`} />
+    </span>
   );
 }

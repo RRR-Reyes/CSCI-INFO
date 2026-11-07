@@ -1384,7 +1384,7 @@ svg text { font-family: var(--font); }
 .hub-panel-body { flex: 1; overflow: auto; padding: 8px 40px 40px; opacity: 0; transition: opacity 0.25s 0.2s; }
 .hub-overlay.is-grown .hub-panel-body { opacity: 1; }
 .hub-panel-body .course-row:first-child { margin-top: 16px; }
-.hub-panel-body > .tile-grid { margin-top: 12px; }
+.hub-panel-body > .tile-grid, .hub-panel-body > .tile-stack { margin-top: 12px; }
 @media (max-width: 640px) {
   .hub-panel { inset: 16px 0; border-radius: 24px; }
   .hub-panel-head, .hub-panel-body { padding-left: 20px; padding-right: 20px; }
@@ -1448,3 +1448,59 @@ svg text { font-family: var(--font); }
 .tile-hub::before { width: 22px; height: 22px; right: 26px; top: 26px; }
 .tile-hub.shape-triangle::after { right: -30px; bottom: -36px; }
 @media (prefers-reduced-motion: reduce) { .tile, .tile::after, .tile::before { transition: none; } }
+
+/* wide tiles: one per row in the Set Theory and Playground boxes */
+.tile-stack { display: flex; flex-direction: column; gap: 14px; }
+.tile-wide { min-height: 132px; padding: 20px 26px; border-radius: 18px; }
+.tile-wide strong { font-size: 1.35rem; max-width: 55%; }
+.tile-wide .tile-blurb { font-size: 0.95rem; max-width: 50%; }
+.tile-wide::after { width: 150px; height: 150px; right: -36px; bottom: -48px; }
+.tile-wide.shape-pill::after { width: 190px; height: 64px; right: -40px; bottom: 14px; }
+.tile-wide.shape-quarter::after { width: 120px; height: 120px; right: -6px; bottom: -6px; }
+.tile-wide .tile-meta { color: hsl(var(--uh) 50% 36%); }
+
+.deco { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.deco > * { position: absolute; transition: transform 0.5s var(--ease-out); }
+.deco-glyph {
+  right: 170px; top: 50%; transform: translateY(-50%) rotate(-4deg);
+  font-size: 2.6rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap;
+  color: hsl(var(--uh) 55% 45% / 0.32);
+}
+.deco-dots {
+  width: 84px; height: 48px; right: 400px; top: 16px;
+  background: radial-gradient(circle, hsl(var(--uh) 45% 50% / 0.35) 2px, transparent 2.5px) 0 0 / 12px 12px;
+}
+.deco-outline { width: 54px; height: 54px; right: 330px; bottom: -18px; border: 3px solid hsl(calc(var(--uh) + 30) 60% 70%); box-sizing: border-box; }
+.deco-chip { width: 20px; height: 20px; right: 128px; top: 18px; background: hsl(calc(var(--uh) - 30) 75% 78%); }
+/* the outline and chip borrow the tile shapes; a few need their own geometry */
+.deco .shape-circle, .deco .shape-ring, .deco .shape-blob { border-radius: 50%; }
+.deco .shape-diamond { transform: rotate(45deg); border-radius: 6px; }
+.deco .shape-pill { border-radius: 30px; width: 70px; }
+.deco .shape-quarter { border-top-left-radius: 100%; }
+.deco-chip.shape-triangle { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.deco-chip.shape-hexagon { clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+.deco-outline.shape-triangle, .deco-outline.shape-hexagon { border-radius: 10px; transform: rotate(18deg); }
+/* shift the arrangement from row to row */
+.deco-1 .deco-dots { right: 250px; top: auto; bottom: 14px; }
+.deco-1 .deco-outline { right: 440px; bottom: auto; top: -16px; }
+.deco-1 .deco-glyph { right: 190px; transform: translateY(-50%) rotate(3deg); }
+.deco-2 .deco-dots { right: 330px; top: 20px; width: 60px; height: 60px; }
+.deco-2 .deco-outline { right: 210px; bottom: -22px; width: 64px; height: 64px; }
+.deco-2 .deco-chip { right: 470px; top: auto; bottom: 22px; }
+.tile-wide:hover:not(:disabled) .deco-glyph { transform: translateY(-50%) translateX(-8px) rotate(0deg); }
+.tile-wide:hover:not(:disabled) .deco-outline { transform: rotate(40deg) scale(1.15); }
+.tile-wide:hover:not(:disabled) .deco-chip { transform: translateY(6px) rotate(-20deg); }
+.tile-wide:hover:not(:disabled) .deco-dots { transform: translateX(-10px); }
+.tile-wide:hover:not(:disabled) { transform: translateX(4px); }
+
+@media (max-width: 760px) {
+  .tile-wide strong, .tile-wide .tile-blurb { max-width: 72%; }
+  .deco-dots, .deco-outline { display: none; }
+  .deco .deco-glyph { font-size: 1.3rem; right: 40px; top: 16px; transform: none; }
+  .tile-wide::after { width: 96px; height: 96px; right: -28px; bottom: -34px; }
+  .tile-wide.shape-pill::after { width: 120px; height: 44px; right: -30px; bottom: 10px; }
+  .tile-wide.shape-quarter::after { width: 80px; height: 80px; }
+  .tile-wide:hover:not(:disabled) .deco .deco-glyph { transform: none; }
+  .deco-chip { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .deco > * { transition: none; } }
