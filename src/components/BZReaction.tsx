@@ -232,10 +232,11 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     let started = -1; // real time of the first click
     const bubbles: { x: number; y: number; r: number; born: number }[] = [];
 
-    /** A random number of pulses, 6 to 8, before a pacemaker goes quiet. */
-    const pulses = () => 6 + Math.floor(Math.random() * 3);
-    // Randomly placed pacemakers never number more than this at once (4 to 8, picked per visit).
-    const MAX_AUTO = 4 + Math.floor(Math.random() * 5);
+    /** A random number of pulses, 3 to 10, before a pacemaker goes quiet. */
+    const pulses = () => 3 + Math.floor(Math.random() * 8);
+    // How many randomly placed pacemakers to keep going at once (6 to 8, picked per visit).
+    const MAX_AUTO = 6 + Math.floor(Math.random() * 3);
+    let pendingAuto = 0; // random pacemakers scheduled but not yet placed
     const autoCount = () => pacemakers.filter((p) => p.auto).length;
     const MAX_CLICKS = 4; // clicked pacemakers allowed at once, so rings don't get crowded
 
@@ -262,7 +263,7 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
     const addPacemaker = (x: number, y: number, auto: boolean) => {
       // Real pacemakers fire at slightly different rates, which is what gives the cusps
       // where two families of rings collide.
-      // Each pacemaker sends out 6 to 8 rings and then goes quiet, so the dish clears.
+      // Each pacemaker sends out 3 to 10 rings and then goes quiet, so the dish clears.
       pacemakers.push({ x, y, period: 2.0 + Math.random() * 0.8, next: simTime, until: -1, left: pulses(), auto });
     };
 
@@ -364,12 +365,18 @@ export default function BZReaction({ host }: { host: RefObject<HTMLElement> }) {
           bubbles.push({ x: Math.random(), y: Math.random(), r: 1.5 + Math.random() ** 3 * 4, born: realTime + 4 + Math.random() * 90 });
         }
       }
-      // The disturbance seeds one pacemaker elsewhere, unless enough random ones are already going.
-      timers.push(
-        window.setTimeout(() => {
-          if (autoCount() < MAX_AUTO) addPacemaker(0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8, true);
-        }, 1800 + Math.random() * 3500),
-      );
+      // The disturbance seeds random pacemakers elsewhere, topping the dish up to MAX_AUTO.
+      // They appear one by one over the next several seconds rather than all at once.
+      const need = MAX_AUTO - autoCount() - pendingAuto;
+      for (let i = 0; i < need; i++) {
+        pendingAuto++;
+        timers.push(
+          window.setTimeout(() => {
+            pendingAuto--;
+            if (autoCount() < MAX_AUTO) addPacemaker(0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8, true);
+          }, 1500 + i * 1200 + Math.random() * 1500),
+        );
+      }
     };
 
     const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting));
