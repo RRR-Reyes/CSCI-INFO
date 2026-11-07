@@ -7,7 +7,7 @@
     "react",
     "starter"
   ],
-  "homepage": "https://click.soon.it",
+  "homepage": "",
   "main": "src/index.tsx",
   "dependencies": {
     "@fontsource/assistant": "^5.1.0",
