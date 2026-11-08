@@ -5,6 +5,7 @@ import { AboutArt, GoalArt, HubShape } from "./HomeArt";
 import { COURSES, findCourse, sectionsOf } from "../courses";
 import type { Course, Unit } from "../courses";
 import { go } from "../useHashRoute";
+import { OddShapeIcon, unitShapeIndex } from "./OddShapeIcon";
 
 /** How many hands-on visuals a unit has, for its tile. */
 function visualCount(u: Unit) {
@@ -239,7 +240,7 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
               ))}
             </div>
           ) : (
-            COURSES.map((course) => (
+            COURSES.map((course, ci) => (
               <article key={course.id} className="course-row" style={{ ["--h" as string]: course.hue }}>
                 <div className="course-row-head">
                   <div>
@@ -252,13 +253,14 @@ function HubPanel({ hub, from, onClose }: { hub: Hub; from: DOMRect; onClose: ()
                   {course.units.map((u, i) => (
                     <button
                       key={u.id}
-                      className={`tile ${shapeOf(i)}`}
+                      className="tile tile-odd"
                       style={tileStyle(courseTileHue(course, i), i)}
                       onClick={() => go(course.id, u.id)}
                     >
                       <span className="tile-label">{u.label}</span>
                       <strong>{u.title}</strong>
                       <span className="tile-meta">{visualCount(u)}</span>
+                      <OddShapeIcon className="tile-odd-shape" k={unitShapeIndex(ci, i)} id={`h-${course.id}-${u.id}`} />
                     </button>
                   ))}
                 </div>

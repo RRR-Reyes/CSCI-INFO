@@ -65,6 +65,12 @@ export default function CoursePage({ course, unitId, onOpenPicker }: Props) {
         return rest;
       }));
 
+  // Snap scrolling between the intro and each section, like the home page.
+  useEffect(() => {
+    document.documentElement.classList.add("snap-lesson");
+    return () => document.documentElement.classList.remove("snap-lesson");
+  }, []);
+
   // A new unit starts at the top of its intro.
   useEffect(() => {
     window.scrollTo({ top: 0 });

@@ -144,7 +144,7 @@ export const discrete: Course = {
           visualHint: "Click regions of the diagram (or the region chips) to build a selection. Every expression for it appears below.",
           body: [
             "Three overlapping circles split the universe into eight regions, and every operation just picks some of them. \\(A \\cup B\\) keeps anything touching A or B, \\(A \\cap B\\) keeps only the overlap, \\(A - B\\) keeps the part of A outside B, and \\(A^c\\) is everything outside A.",
-            "Because operations are choices of regions, one shaded shape has many correct names. Click regions and watch every expression that describes your selection appear, in set notation, set-builder form and logic.",
+            "Because operations are choices of regions, one shaded shape has many correct names. Click regions and watch every expression that describes your selection appear, in set notation and logic.",
           ],
           checkpoints: [
             {
@@ -160,7 +160,7 @@ export const discrete: Course = {
           title: "Cardinality",
           thumb: { tex: "|A \\mathbin{\\color{#009CDE}{\\cup}} B|" },
           Visual: CardinalityLab,
-          visualHint: "Change how many elements sit in each region, then add the inclusion–exclusion terms one at a time. Below, grow a set to see its power set.",
+          visualHint: "Left click a region to drop an element in, right click to take one out, then add the inclusion–exclusion terms one at a time. Below, grow a set to see its power set.",
           body: [
             "The cardinality |A| counts the distinct elements of A. Adding |A| + |B| + |C| counts overlaps more than once, so inclusion–exclusion subtracts each pairwise overlap and adds the triple overlap back:",
             "\\[\\begin{aligned} |A \\cup B \\cup C| &= |A| + |B| + |C| \\\\ &\\quad - |A \\cap B| - |A \\cap C| - |B \\cap C| \\\\ &\\quad + |A \\cap B \\cap C| \\end{aligned}\\]",
@@ -180,7 +180,7 @@ export const discrete: Course = {
           title: "Set Theory Concepts",
           thumb: { tex: "A \\mathrel{\\color{#46C8B2}{\\subseteq}} B" },
           Visual: SetRelations,
-          visualHint: "Pick an arrangement. The circles glide into place and the badges show which relationships hold.",
+          visualHint: "Pick an arrangement. The circles glide into place and the badges show which relationships hold. Switch between ∅ and { } to see both ways textbooks write the empty set.",
           body: [
             "\\(A \\subseteq B\\) means every element of A is also in B. It's a proper subset, \\(A \\subset B\\), when B has at least one element A lacks. Two sets are disjoint when their intersection is empty.",
             "The empty set ∅ is a subset of every set and disjoint from every set. But ∅ ⊆ S and ∅ ∈ S are different claims: the second needs ∅ itself to be an element.",
@@ -199,7 +199,7 @@ export const discrete: Course = {
           title: "Cartesian Products",
           thumb: { icon: GridFour, color: "#46C8B2" },
           Visual: CartesianGrid,
-          visualHint: "Toggle elements of A and B. Swap the order to compare A × B with B × A.",
+          visualHint: "Pick a pair of example sets and toggle their elements. Build A × B, B × A, A × A or B × B, view it as a grid or a set of pairs, and click pairs to pick out a relation.",
           body: [
             "A × B is the set of every ordered pair (a, b) with a from A and b from B. Lay A down one side and B across the top, and each cell is one pair, so \\(|A \\times B| = |A| \\cdot |B|\\).",
             "Order matters: (a, 1) and (1, a) are different pairs, so A × B ≠ B × A in general. And A × ∅ = ∅, because there is nothing to pair with.",
