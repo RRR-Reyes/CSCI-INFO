@@ -873,8 +873,10 @@ svg text { font-family: var(--font); }
 
 /* 3-set venn */
 .venn-universe { fill: #fbfafe; stroke: hsl(var(--uh) 30% 85%); stroke-width: 2; }
-.venn-svg .region { transition: fill 0.3s; pointer-events: none; }
+.venn-svg .region { transition: fill-opacity 0.3s; pointer-events: none; }
 .venn-svg { cursor: pointer; }
+.venn3-svg .venn-ring { stroke-width: 2.5; }
+.venn3-svg .venn-label { font-family: "KaTeX_Main", "Cambria Math", Georgia, serif; font-style: italic; font-size: 32px; font-weight: 400; }
 .venn-u { font-size: 13px; font-weight: 700; fill: var(--ink-3); }
 .venn-clear { margin-left: auto; }
 .venn-out { border-radius: 3px; background: hsl(var(--uh) 50% 97%); padding: 14px 16px; display: grid; gap: 10px; font-size: 0.92rem; }
@@ -1048,8 +1050,8 @@ svg text { font-family: var(--font); }
 .st-scroll-down { margin-top: 48px; padding: 6px; animation: bob-y 2.2s ease-in-out infinite; }
 .st-scroll-down path { fill: none; stroke: #000; stroke-width: 1.6; }
 
-.st-unit { padding-top: 40vh; }
-.st-unit:first-of-type { padding-top: 10vh; }
+.st-unit { margin-top: 40vh; }
+.st-unit:first-of-type { margin-top: 10vh; }
 .st-unit h3 { font-size: 32px; font-weight: 400; margin-bottom: 18px; }
 .st-unit p { font-size: 18px; line-height: 1.4; margin-bottom: 18px; color: #1d1d1d; }
 .st-unit .st-hint { color: #333; }
@@ -1093,7 +1095,7 @@ svg text { font-family: var(--font); }
   .st-nav { width: auto; padding: 0 16px; margin-top: 14px; }
   .st-intro { padding: 22vh 0 12vh; }
   .st-intro p { font-size: 1.3em; }
-  .st-unit, .st-unit:first-of-type { padding-top: 12vh; }
+  .st-unit, .st-unit:first-of-type { margin-top: 12vh; }
   .st-unit h3 { font-size: 26px; }
   .st-interactive { background: #fff; border-radius: 8px; padding: 14px; }
   .st-foot { margin-top: 18vh; }
@@ -1200,14 +1202,7 @@ svg text { font-family: var(--font); }
 .st-interactive .viz { gap: 12px; }
 .st-interactive .viz-readout { background: rgba(255, 255, 255, 0.7); }
 
-/* cardinality: Venn with live region counts */
-.card-venn { width: 100%; }
-.card-ring { fill: hsl(var(--uh) 60% 92% / 0.35); stroke: hsl(var(--uh) 30% 45%); stroke-width: 2; transition: stroke-width 0.25s, fill 0.25s; }
-.card-ring.is-term { stroke: var(--accent, hsl(var(--uh) 60% 42%)); stroke-width: 4; fill: hsl(var(--uh) 70% 85% / 0.45); }
-.card-count circle { fill: #fff; stroke: hsl(var(--uh) 25% 60%); stroke-width: 1.5; transition: fill 0.25s; }
-.card-count text { text-anchor: middle; font-size: 16px; font-weight: 600; fill: var(--ink); font-family: var(--mono); }
-.card-count.is-term circle { fill: var(--accent, hsl(var(--uh) 60% 42%)); stroke: none; }
-.card-count.is-term text { fill: #fff; }
+/* cardinality: click-to-fill Venn */
 .ps { display: grid; gap: 8px; }
 
 /* bit flipper: flip-card board */
@@ -1790,3 +1785,301 @@ svg text { font-family: var(--font); }
   .deco-chip { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .deco > * { transition: none; } }
+
+/* ---------- lesson page: liquid glass ---------- */
+/* Slow-moving diagonal sheens over a smooth base, with no color blobs. The reading column
+   is tinted glass in the unit's hue (purple for sets); the right pane is white glass that
+   settles to plain white as the reader scrolls in. background-attachment: fixed keeps both
+   panes in viewport coordinates, so the sheens run straight across the seam. */
+.st {
+  --sheens:
+    linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.9) 40%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, 0.75) 64%, rgba(255, 255, 255, 0) 70%);
+  --glass:
+    var(--sheens),
+    linear-gradient(160deg, #fdfdff 0%, #eef0f7 32%, #f9fafc 58%, #e9ecf4 100%);
+  --glass-tint:
+    var(--sheens),
+    linear-gradient(160deg, hsl(var(--uh) 80% 95%) 0%, hsl(var(--uh) 70% 88%) 32%, hsl(var(--uh) 78% 93%) 58%, hsl(var(--uh) 65% 85%) 100%);
+}
+.st-left { position: relative; isolation: isolate; background: transparent; --pane-glass: var(--glass-tint); }
+.st-left::before, .st-left::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 40%; height: 100vh; pointer-events: none;
+}
+.st-left::before, .st-right::before {
+  z-index: -2;
+  background: var(--pane-glass, var(--glass));
+  background-attachment: fixed;
+  background-size: 220% 220%, 220% 220%, 100% 100%;
+  animation: st-liquid 22s ease-in-out infinite alternate;
+}
+.st-left::after {
+  z-index: -1;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.3) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    inset -1px 0 0 #fff,
+    inset -2px 0 0 rgba(30, 36, 64, 0.06),
+    inset 0 1px 0 #fff,
+    inset -30px 0 50px -30px rgba(40, 48, 90, 0.12);
+}
+.st-right { isolation: isolate; }
+.st-right::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  opacity: calc(1 - var(--fade));
+}
+@keyframes st-liquid {
+  0% { background-position: 0% 0%, 0% 0%, 0 0; }
+  100% { background-position: 100% 100%, 70% 100%, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) { .st-left::before, .st-right::before { animation: none; } }
+.st-header {
+  background: hsl(var(--uh) 80% 95% / 0.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-mask-image: linear-gradient(#000 72%, transparent); mask-image: linear-gradient(#000 72%, transparent);
+}
+@media (max-width: 960px) { .st-left::before, .st-left::after { width: 100%; } }
+
+/* reading typography: Inter headings, calmer body measure */
+.st-intro h1, .st-unit h3 { font-family: "Inter Variable", "Inter", system-ui, sans-serif; letter-spacing: -0.025em; color: hsl(var(--uh) 40% 14%); }
+.st-intro h1 { font-weight: 700; }
+.st-intro h4 { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: hsl(var(--uh) 50% 38%); }
+.st-unit h3 { font-size: 34px; font-weight: 650; line-height: 1.15; margin-bottom: 20px; }
+.st-unit p { font-size: 18.5px; line-height: 1.6; color: hsl(var(--uh) 15% 20%); max-width: 62ch; }
+.st-unit .st-hint { font-size: 16px; color: hsl(var(--uh) 25% 32%); padding-left: 14px; border-left: 3px solid hsl(var(--uh) 60% 60% / 0.5); }
+
+/* venn: centered, evenly split tabs and math-set expressions */
+.venn-tabs { justify-self: center; display: grid; grid-template-columns: 1fr 1fr; width: min(320px, 100%); background: rgba(255, 255, 255, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8); border-radius: 10px; padding: 4px; }
+.venn-tabs button { text-align: center; border-radius: 7px; padding: 8px 0; font-size: 0.92rem; }
+.venn-expr { font-family: "KaTeX_Main", "Cambria Math", Georgia, serif; font-size: 1.05rem; letter-spacing: 0.01em; }
+.st .chip.venn-expr { font-size: 1rem; }
+.venn3-svg .venn-u { font-family: "KaTeX_Main", Georgia, serif; font-style: italic; font-size: 20px; font-weight: 400; }
+.venn-out { font-size: 0.98rem; }
+.venn-forms { grid-template-columns: 84px minmax(0, 1fr); gap: 8px 12px; align-items: baseline; }
+.venn-forms dt { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Lesson pages snap like the home page: the intro, each section's heading (just under the
+   fixed header) and the footer are snap points. A section taller than the screen still
+   scrolls freely inside, since the snap area is the whole section, not just its top.
+   CoursePage.tsx adds .snap-lesson to <html>. */
+html.snap-lesson { scroll-snap-type: y mandatory; }
+.snap-lesson .st-intro { scroll-snap-align: start; }
+.snap-lesson .st-unit { scroll-snap-align: start; scroll-margin-top: 96px; }
+.snap-lesson .st-foot { scroll-snap-align: end; }
+
+/* cardinality: each element is its own numbered token that pops into its region */
+.card-venn2 .venn-ring { transition: stroke-width 0.25s; }
+.card-venn2 .venn-ring.is-term { stroke-width: 4.5; }
+.card-venn2 .region { transition: fill-opacity 0.3s; }
+.card-venn2 { -webkit-user-select: none; user-select: none; }
+.card-token { transition: transform 0.35s var(--ease-out); }
+.card-token-pop { animation: token-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.card-token circle { fill: #fff; stroke-width: 2.5; filter: drop-shadow(0 1px 1.5px rgba(30, 36, 64, 0.22)); }
+.card-token text { text-anchor: middle; font-size: 13px; font-weight: 700; fill: #1f2430; font-family: "Inter Variable", "Inter", system-ui, sans-serif; pointer-events: none; }
+.card-token:hover circle { stroke-width: 3.5; }
+.card-empty-hint { text-anchor: middle; font-size: 13px; fill: var(--ink-3); pointer-events: none; }
+.card-swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+@keyframes token-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .card-token-pop { animation: none; } .card-token { transition: none; } }
+/* region counters: one line each, wide enough for "A ∩ B ∩ C" */
+.viz-card .card-regions { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.viz-card .card-region { padding: 6px 6px 6px 12px; gap: 4px; border-radius: 10px; background: rgba(255, 255, 255, 0.7); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(30, 36, 64, 0.06); font-weight: 600; }
+.card-region-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viz-card .card-region strong { min-width: 1.6em; text-align: center; font-variant-numeric: tabular-nums; }
+.viz-card .card-region .icon-btn { width: 26px; height: 26px; border-radius: 6px; }
+.viz-card .card-region .icon-btn:hover:not(:disabled) { background: hsl(var(--uh) 60% 92%); }
+.viz-card .sq-actions { align-items: center; flex-wrap: wrap; gap: 8px; }
+.viz-card .sq-actions .mips-count { flex: 1; text-align: right; }
+.viz-card .sq-actions .venn-clear { margin-left: 0; }
+
+/* inclusion–exclusion as a two-row equation: term names over their counts */
+.ie-eq { display: grid; gap: 10px; }
+.ie-eq-k { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.ie-eq-k .ie-math { text-transform: none; letter-spacing: 0; font-size: 1rem; color: var(--ink); margin-left: 4px; }
+.ie-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; }
+.ie-term2 {
+  display: grid; justify-items: center; align-content: center; gap: 2px; min-width: 64px; padding: 8px 12px 6px; border-radius: 10px;
+  background: #fff; box-shadow: inset 0 0 0 1px rgba(30, 36, 64, 0.08);
+  opacity: 0.35; transition: opacity 0.3s, box-shadow 0.3s, transform 0.3s var(--ease-out);
+}
+.ie-term2.is-on { opacity: 1; }
+.ie-term2.is-plus.is-on { box-shadow: inset 0 0 0 1px hsl(var(--uh) 50% 80%); background: hsl(var(--uh) 70% 97%); }
+.ie-term2.is-minus.is-on { box-shadow: inset 0 0 0 1px #f3c7cf; background: #fff5f7; }
+.ie-term2.is-current { box-shadow: inset 0 0 0 2px var(--accent, hsl(var(--uh) 60% 45%)); }
+.ie-term2.is-total { opacity: 1; background: var(--accent, hsl(var(--uh) 60% 45%)); box-shadow: none; color: #fff; }
+.ie-name { font-family: "KaTeX_Main", "Cambria Math", Georgia, serif; font-size: 1rem; line-height: 1.2; color: var(--ink-2); white-space: nowrap; }
+.ie-name var, .ie-math var { font-family: "KaTeX_Math", "Cambria Math", Georgia, serif; font-style: italic; }
+.ie-setop { margin: 0 0.18em; }
+.ie-val { font-family: "Inter Variable", "Inter", system-ui, sans-serif; font-size: 1.35rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ie-term2.is-minus .ie-val { color: #a3243b; }
+.ie-term2.is-total .ie-name, .ie-term2.is-total .ie-val { color: #fff; }
+.ie-op { align-self: flex-end; padding-bottom: 7px; font-family: "KaTeX_Main", Georgia, serif; font-size: 1.35rem; color: var(--ink-3); opacity: 0.35; transition: opacity 0.3s; }
+.ie-op.is-on { opacity: 1; color: var(--ink-2); }
+.ie-math { font-family: "KaTeX_Main", "Cambria Math", Georgia, serif; }
+.ps-chips .ie-math { font-size: 0.98rem; padding: 4px 10px; border-radius: 8px; }
+
+/* cardinality lab typography: Inter for UI text, KaTeX for anything that is math */
+.viz-card, .viz-card button, .card-venn2 text, .ps .viz-readout {
+  font-family: "Inter Variable", "Inter", system-ui, sans-serif;
+}
+.viz-card .venn-tabs button { font-size: 0.88rem; font-weight: 600; letter-spacing: -0.005em; }
+.viz-card .card-region { font-size: 0.95rem; font-weight: 400; }
+.card-region-name var { font-family: "KaTeX_Math", "Cambria Math", Georgia, serif; font-style: italic; font-size: 1.12em; color: var(--ink); }
+.card-region-name .ie-setop { font-family: "KaTeX_Main", Georgia, serif; color: var(--ink-2); }
+.card-only { margin-left: 0.35em; font-size: 0.82em; font-weight: 500; color: var(--ink-3); }
+.card-count-num { min-width: 1.6em; text-align: center; font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+.viz-card .icon-btn { font-size: 1.05rem; font-weight: 500; color: var(--ink-2); }
+.viz-card .sq-actions .btn { font-size: 0.88rem; font-weight: 600; letter-spacing: -0.005em; padding: 9px 16px; border-radius: 10px; }
+.viz-card .sq-actions .btn:not(.btn-soft):not(:disabled) { background: var(--accent); color: #fff; box-shadow: none; }
+.viz-card .sq-actions .btn:not(.btn-soft):not(:disabled):hover { background: hsl(var(--uh) 70% 36%); color: #fff; }
+.card-status { flex: 1; text-align: right; font-size: 0.85rem; color: var(--ink-3); }
+.card-status b { font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.card-status.is-done { color: var(--ok); }
+.card-status.is-done b { color: var(--ok); }
+.card-row-k { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+.viz-card .viz-chips { align-items: center; gap: 6px; }
+.viz-card .viz-chips .chip { border-radius: 8px; padding: 5px 12px; }
+.viz-card .chip .ie-math { font-size: 1rem; }
+.viz-card .chip.is-on .ie-math var { color: inherit; }
+.viz-card .venn-clear { font-size: 0.85rem; border-radius: 8px; }
+.card-venn2 .card-empty-hint { font-size: 13px; letter-spacing: 0.005em; }
+.ps .viz-readout { font-size: 0.88rem; line-height: 1.5; color: var(--ink-2); background: hsl(var(--uh) 30% 98%); border-color: hsl(var(--uh) 20% 92%); border-radius: 10px; }
+.ps .viz-readout .ie-math { font-size: 1.05rem; color: var(--ink); }
+.ie-math sup { font-size: 0.7em; }
+
+/* ---------- shared lab typography (Set Theory Concepts, Cartesian Products) ---------- */
+.lab, .lab button { font-family: "Inter Variable", "Inter", system-ui, sans-serif; }
+.lab var, .ie-math var { font-family: "KaTeX_Math", "Cambria Math", Georgia, serif; font-style: italic; }
+.lab-k { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+.lab .viz-chips { align-items: center; gap: 6px; }
+.lab .chip { border-radius: 8px; padding: 6px 13px; font-size: 0.9rem; }
+.lab .chip .ie-math { font-size: 1.05rem; }
+.lab .viz-readout { font-size: 0.95rem; line-height: 1.55; color: var(--ink-2); background: hsl(var(--uh) 30% 98%); border: 1px solid hsl(var(--uh) 20% 92%); border-radius: 10px; padding: 12px 14px; }
+.lab .viz-readout var { color: var(--ink); font-size: 1.08em; }
+
+/* empty-set notation switch */
+.empty-toggle { display: inline-flex; align-items: center; gap: 4px; justify-self: start; }
+.empty-toggle button { min-width: 44px; padding: 4px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.6); box-shadow: inset 0 0 0 1px rgba(30, 36, 64, 0.1); color: var(--ink-2); }
+.empty-toggle button .ie-math { font-size: 1.1rem; }
+.empty-toggle button.is-on { background: var(--accent); color: #fff; box-shadow: none; }
+
+/* set relations */
+.rel-svg .rel-circle { fill-opacity: 0.18; stroke-width: 2.5; }
+.rel-svg .rel-a { fill-opacity: 0.28; }
+.rel-svg .rel-tag { font-family: "KaTeX_Math", "Cambria Math", Georgia, serif; font-style: italic; font-weight: 400; font-size: 28px; }
+.rel-empty-tag { transition: opacity 0.4s; }
+.rel-empty-tag text { text-anchor: middle; font-family: "KaTeX_Main", Georgia, serif; font-size: 22px; }
+.rel-empty-tag .rel-var { font-family: "KaTeX_Math", Georgia, serif; font-style: italic; }
+.rel-badge { border-radius: 10px; padding: 12px 6px; gap: 4px; }
+.rel-badge .ie-math { font-size: 1.15rem; font-weight: 400; }
+.rel-badge small { font-family: "Inter Variable", "Inter", system-ui, sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; }
+.rel-badge.is-no { text-decoration: none; }
+.rel-badge.is-no .ie-math { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.rel-alt { color: var(--ink-3); }
+
+/* cartesian products */
+.cart-set { min-width: 2.6em; font-size: 1.15rem; color: var(--ink); }
+.cart-board.lab { border-radius: 14px; background: hsl(var(--uh) 40% 98%); box-shadow: inset 0 0 0 1px hsl(var(--uh) 25% 92%); padding: 14px; }
+.cart-table { border-spacing: 6px; }
+.cart-table th { font-size: 1.1rem; font-weight: 400; color: var(--ink-2); padding: 0 6px; }
+.cart-corner { color: var(--ink-3) !important; font-size: 1.2rem !important; }
+.cart-pair {
+  font-family: "KaTeX_Main", "Cambria Math", Georgia, serif; font-size: 1rem; white-space: nowrap;
+  padding: 6px 10px; border-radius: 8px; background: #fff; box-shadow: inset 0 0 0 1px hsl(var(--uh) 30% 86%);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.cart-pair:hover { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cart-pair.is-picked { background: var(--accent); color: #fff; box-shadow: none; }
+.cart-pair.is-picked var { color: #fff; }
+.cart-list { font-size: 1.05rem; line-height: 2.3; }
+.cart-list .cart-pair { padding: 3px 8px; }
+.cart-empty strong { font-size: 1.8rem; font-weight: 400; }
+.cart-empty span { font-family: "Inter Variable", "Inter", system-ui, sans-serif; font-size: 0.92rem; }
+.cart-readout { display: grid; gap: 6px; font-family: "Inter Variable", "Inter", system-ui, sans-serif; font-size: 0.92rem; color: var(--ink-2); }
+.cart-readout .ie-math { font-size: 1.08rem; color: var(--ink); }
+.cart-readout b { font-family: "Inter Variable", "Inter", system-ui, sans-serif; font-size: 1.05rem; }
+.cart-note { color: var(--ink-3); }
+.cart-rel { padding-top: 6px; border-top: 1px dashed hsl(var(--uh) 20% 88%); }
+
+/* compact inclusion–exclusion: slim term chips instead of big cards */
+.ie-row { gap: 4px; align-items: center; }
+.ie-term2 { min-width: 0; padding: 3px 8px 2px; gap: 0; border-radius: 7px; }
+.ie-name { font-size: 0.78rem; line-height: 1.15; }
+.ie-val { font-size: 1rem; line-height: 1.15; }
+.ie-op { align-self: auto; padding: 0 1px; font-size: 1rem; }
+.ie-term2.is-current { box-shadow: inset 0 0 0 1.5px var(--accent, hsl(var(--uh) 60% 45%)); }
+
+/* set operations: chips match the Cartesian lab */
+.viz-venn3 .chip var { font-size: 1.08em; }
+.viz-venn3 .chip .ie-setop { font-family: "KaTeX_Main", Georgia, serif; margin: 0 0.2em; }
+.region-word { margin-left: 0.35em; font-size: 0.88em; color: var(--ink-3); }
+.chip.is-on .region-word { color: rgba(255, 255, 255, 0.8); }
+.viz-venn3 .chip.venn-expr { font-size: 0.9rem; }
+.viz-venn3 .venn-clear { margin-left: auto; }
+.venn-ways span var, .venn-forms var { font-size: 1.05em; }
+.region-word:first-child { margin-left: 0; font-size: 1em; color: inherit; }
+
+/* ---------- chapter picker: white glass panel, tinted glass tiles, Inter type ---------- */
+.picker { background: rgba(28, 26, 48, 0.42); -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2); }
+.picker-panel {
+  font-family: "Inter Variable", "Inter", system-ui, sans-serif;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 247, 252, 0.95) 55%, rgba(238, 240, 248, 0.95) 100%);
+  border: 1px solid #fff; border-radius: 28px; padding: 20px 36px 44px;
+  box-shadow: inset 0 1.5px 0 #fff, 0 40px 90px -30px rgba(30, 30, 70, 0.45), 0 12px 30px -12px rgba(30, 30, 70, 0.25);
+}
+.picker-panel button { font-family: inherit; }
+.picker-head { top: -20px; padding: 14px 0 14px; background: rgba(248, 249, 252, 0.85); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(30, 36, 64, 0.06); }
+.picker-head h2 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; color: #14161f; }
+.picker-head .link-btn { font-size: 0.9rem; font-weight: 600; color: var(--ink-2); padding: 6px 10px; border-radius: 8px; }
+.picker-head .link-btn:hover { background: rgba(30, 36, 64, 0.05); color: var(--ink); }
+.picker-head .icon-btn { width: 36px; height: 36px; font-size: 0.95rem; color: var(--ink-2); }
+.picker-course { margin-top: 30px; }
+.picker-course h3 { align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.picker-course h3 .link-btn { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; color: hsl(var(--h) 45% 28%); }
+.picker-course h3 .link-btn:hover { color: hsl(var(--h) 55% 38%); }
+.picker-course h3 small { font-size: 0.78rem; font-weight: 500; color: var(--ink-3); }
+.picker-units { grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 10px; }
+.picker-unit {
+  gap: 4px; padding: 12px 14px 14px; border-radius: 16px; min-height: 76px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.95) 0%, hsl(var(--uh) 90% 97% / 0.92) 50%, hsl(var(--uh) 80% 93% / 0.9) 100%);
+  border: 1px solid #fff;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 1px hsl(var(--uh) 40% 80% / 0.6), 0 10px 22px -14px hsl(var(--uh) 50% 40% / 0.3);
+  color: hsl(var(--uh) 40% 16%);
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.picker-unit small { display: flex; align-items: center; gap: 8px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.09em; opacity: 1; color: hsl(var(--uh) 45% 42%); }
+.picker-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+.picker-unit:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 #fff, 0 1px 1px hsl(var(--uh) 40% 80% / 0.6), 0 16px 28px -14px hsl(var(--uh) 50% 40% / 0.4); }
+.picker-unit.is-current { box-shadow: inset 0 0 0 2px hsl(var(--uh) 55% 48%), 0 10px 22px -14px hsl(var(--uh) 50% 40% / 0.35); }
+.picker-here { margin-left: auto; padding: 1px 7px; border-radius: 99px; background: hsl(var(--uh) 55% 48%); color: #fff; font-size: 0.6rem; letter-spacing: 0.06em; }
+@media (prefers-reduced-motion: reduce) { .picker-unit:hover { transform: none; } }
+
+/* picker tiles: an unusual shape tucked into the bottom-right corner */
+.picker-unit {
+  --shape-from: hsl(calc(var(--uh) + 4) 95% 80%);
+  --shape-to: hsl(calc(var(--uh) + 18) 78% 62%);
+  position: relative; overflow: hidden; isolation: isolate; padding-right: 64px;
+}
+.picker-unit > small, .picker-title { position: relative; z-index: 1; }
+.picker-shape {
+  position: absolute; right: -10px; bottom: -14px; width: 74px; height: 74px; z-index: 0;
+  opacity: 0.85; transform: rotate(-8deg);
+  filter: drop-shadow(0 6px 8px hsl(var(--uh) 60% 40% / 0.22));
+  transition: transform 0.45s var(--ease-out), opacity 0.3s;
+}
+.picker-shape svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.picker-unit:hover .picker-shape { transform: rotate(14deg) scale(1.18); opacity: 1; }
+.picker-unit .picker-here { position: relative; z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .picker-shape { transition: none; } .picker-unit:hover .picker-shape { transform: rotate(-8deg); } }
+
+/* course library tiles: the unusual shapes replace the plain corner shapes */
+.tile-odd::after { display: none; }
+.tile > .tile-odd-shape {
+  position: absolute; z-index: 0; right: -18px; bottom: -22px; width: 104px; height: 104px;
+  transform: rotate(-10deg); pointer-events: none;
+  filter: drop-shadow(0 12px 16px hsl(var(--uh) 60% 40% / 0.22));
+  transition: transform 0.45s var(--ease-out);
+}
+.tile-odd-shape svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.tile-odd:hover .tile-odd-shape { transform: rotate(15deg) scale(1.3); }
+@media (prefers-reduced-motion: reduce) { .tile-odd-shape { transition: none; } .tile-odd:hover .tile-odd-shape { transform: rotate(-10deg); } }
